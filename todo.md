@@ -1,0 +1,9 @@
+# Project TODO
+
+- [x] Create the Manus-inspired ALSI Ai chat home interface with dynamic message rendering and keyboard-safe composer.
+- [x] Add an accessible controls sheet for Normal/Thinking behavior and Aggressive Mode intensity.
+- [x] Implement the OpenRouter request path with dynamic model, temperature, and behavior instructions.
+- [x] Add loading, error, retry, auto-scroll, and conversation-reset behavior.
+- [x] Create ALSI Ai branding assets and configure the Expo app metadata.
+- [x] Add focused unit tests for API payload creation and UI state helpers.
+- [x] Run TypeScript and test validation, verify the mobile layout, and create the final checkpoint.
