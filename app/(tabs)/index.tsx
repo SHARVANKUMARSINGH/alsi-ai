@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   Keyboard,
@@ -15,9 +15,18 @@ import {
 
 import { AiControlsSheet } from "@/components/ai-controls-sheet";
 import { ChatMessage } from "@/components/chat-message";
+import { ConversationSidebar } from "@/components/conversation-sidebar";
 import { ThinkingIndicator } from "@/components/thinking-indicator";
 import { ScreenContainer } from "@/components/screen-container";
 import { createMessage, getModeSummary, type ChatMessage as ChatMessageType, type ChatSettings } from "@/lib/chat";
+import {
+  appendMessageToConversation,
+  createConversation,
+  loadConversations,
+  saveConversations,
+  sortConversations,
+  type Conversation,
+} from "@/lib/conversations";
 import { trpc } from "@/lib/trpc";
 
 const starterPrompts = [
@@ -33,13 +42,40 @@ const defaultSettings: ChatSettings = {
 
 export default function HomeScreen() {
   const listRef = useRef<FlatList<ChatMessageType>>(null);
-  const [messages, setMessages] = useState<ChatMessageType[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [settings, setSettings] = useState(defaultSettings);
   const [controlsOpen, setControlsOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const completion = trpc.chat.complete.useMutation();
   const isSending = completion.isPending;
+  const activeConversation = useMemo(
+    () => conversations.find((conversation) => conversation.id === activeConversationId) ?? null,
+    [activeConversationId, conversations],
+  );
+  const messages = activeConversation?.messages ?? [];
+  const settings = activeConversation?.settings ?? defaultSettings;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadConversations().then((savedConversations) => {
+      if (!isMounted) return;
+      setConversations(savedConversations);
+      setActiveConversationId(savedConversations[0]?.id ?? null);
+      setHistoryLoaded(true);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!historyLoaded) return;
+    saveConversations(conversations).catch(() => undefined);
+  }, [conversations, historyLoaded]);
 
   useEffect(() => {
     if (messages.length > 0 || isSending) {
@@ -49,38 +85,89 @@ export default function HomeScreen() {
     return undefined;
   }, [isSending, messages.length]);
 
+  const updateConversation = useCallback((conversationId: string, updater: (conversation: Conversation) => Conversation) => {
+    setConversations((previous) => sortConversations(previous.map((conversation) => (
+      conversation.id === conversationId ? updater(conversation) : conversation
+    ))));
+  }, []);
+
+  const startNewConversation = useCallback(() => {
+    const conversation = createConversation(defaultSettings);
+    setConversations((previous) => sortConversations([conversation, ...previous]));
+    setActiveConversationId(conversation.id);
+    setDraft("");
+    setSidebarOpen(false);
+  }, []);
+
+  const updateSettings = useCallback((nextSettings: ChatSettings) => {
+    if (!activeConversation) {
+      const conversation = createConversation(nextSettings);
+      setConversations((previous) => sortConversations([conversation, ...previous]));
+      setActiveConversationId(conversation.id);
+      return;
+    }
+
+    updateConversation(activeConversation.id, (conversation) => ({
+      ...conversation,
+      settings: nextSettings,
+      updatedAt: Date.now(),
+    }));
+  }, [activeConversation, updateConversation]);
+
   const sendMessage = useCallback(async () => {
     const content = draft.trim();
     if (!content || isSending) return;
 
     Keyboard.dismiss();
+    const conversation = activeConversation ?? createConversation(defaultSettings);
     const userMessage = createMessage("user", content);
-    const requestMessages = [...messages.filter((message) => !message.isError), userMessage].map(({ role, content: messageContent }) => ({
+    const requestMessages = [...conversation.messages.filter((message) => !message.isError), userMessage].map(({ role, content: messageContent }) => ({
       role,
       content: messageContent,
     }));
+    const updatedConversation = appendMessageToConversation(conversation, userMessage);
 
-    setMessages((previous) => [...previous, userMessage]);
+    setConversations((previous) => {
+      const exists = previous.some((item) => item.id === conversation.id);
+      const next = exists
+        ? previous.map((item) => (item.id === conversation.id ? updatedConversation : item))
+        : [updatedConversation, ...previous];
+      return sortConversations(next);
+    });
+    setActiveConversationId(conversation.id);
     setDraft("");
 
     try {
       const response = await completion.mutateAsync({
         messages: requestMessages,
-        mode: settings.mode,
-        aggression: settings.aggression,
+        mode: conversation.settings.mode,
+        aggression: conversation.settings.aggression,
       });
-      setMessages((previous) => [...previous, createMessage("assistant", response.content)]);
+      const assistantMessage = createMessage("assistant", response.content);
+      updateConversation(conversation.id, (current) => appendMessageToConversation(current, assistantMessage));
     } catch (error) {
       const explanation = error instanceof Error ? error.message : "Please try again.";
-      setMessages((previous) => [...previous, createMessage("assistant", explanation, { isError: true })]);
+      const errorMessage = createMessage("assistant", explanation, { isError: true });
+      updateConversation(conversation.id, (current) => appendMessageToConversation(current, errorMessage));
     }
-  }, [completion, draft, isSending, messages, settings]);
+  }, [activeConversation, completion, draft, isSending, updateConversation]);
 
-  const newConversation = useCallback(() => {
-    setMessages([]);
+  const openConversation = useCallback((conversation: Conversation) => {
+    setActiveConversationId(conversation.id);
     setDraft("");
-    setMenuOpen(false);
+    setSidebarOpen(false);
   }, []);
+
+  const deleteConversation = useCallback((conversationId: string) => {
+    setConversations((previous) => {
+      const next = previous.filter((conversation) => conversation.id !== conversationId);
+      if (conversationId === activeConversationId) {
+        setActiveConversationId(next[0]?.id ?? null);
+        setDraft("");
+      }
+      return next;
+    });
+  }, [activeConversationId]);
 
   const renderItem = useCallback(({ item }: ListRenderItemInfo<ChatMessageType>) => <ChatMessage message={item} />, []);
 
@@ -108,7 +195,15 @@ export default function HomeScreen() {
     <ScreenContainer edges={["top", "left", "right", "bottom"]} containerClassName="bg-background">
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
         <View style={styles.header}>
-          <View style={styles.brandRow}>
+          <View style={styles.headerLeft}>
+            <Pressable
+              accessibilityLabel="Open conversation sidebar"
+              onPress={() => setSidebarOpen(true)}
+              style={({ pressed }) => [styles.sidebarButton, pressed && styles.pressed]}
+            >
+              <MaterialCommunityIcons color="#2E2E2C" name="menu" size={22} />
+            </Pressable>
+            <View style={styles.brandRow}>
             <View style={styles.logoMark}>
               <Text style={styles.logoText}>A</Text>
             </View>
@@ -118,6 +213,7 @@ export default function HomeScreen() {
                 <View style={styles.statusDot} />
                 <Text style={styles.statusText}>Ready for your next thought</Text>
               </View>
+            </View>
             </View>
           </View>
           <View style={styles.headerActions}>
@@ -129,25 +225,13 @@ export default function HomeScreen() {
               <MaterialCommunityIcons color="#2E2E2C" name="tune-vertical" size={20} />
             </Pressable>
             <Pressable
-              accessibilityLabel="Open chat menu"
-              onPress={() => setMenuOpen((open) => !open)}
+              accessibilityLabel="Open conversation sidebar"
+              onPress={() => setSidebarOpen(true)}
               style={({ pressed }) => [styles.headerButton, pressed && styles.pressed]}
             >
-              <MaterialCommunityIcons color="#2E2E2C" name="dots-horizontal" size={21} />
+              <MaterialCommunityIcons color="#2E2E2C" name="message-text-outline" size={20} />
             </Pressable>
           </View>
-          {menuOpen ? (
-            <View style={styles.menu}>
-              <Pressable onPress={newConversation} style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}>
-                <MaterialCommunityIcons color="#353533" name="plus" size={17} />
-                <Text style={styles.menuText}>New chat</Text>
-              </Pressable>
-              <Pressable onPress={() => { setControlsOpen(true); setMenuOpen(false); }} style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}>
-                <MaterialCommunityIcons color="#353533" name="tune-vertical" size={17} />
-                <Text style={styles.menuText}>Controls</Text>
-              </Pressable>
-            </View>
-          ) : null}
         </View>
 
         <FlatList
@@ -211,7 +295,16 @@ export default function HomeScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      <AiControlsSheet onChange={setSettings} onClose={() => setControlsOpen(false)} settings={settings} visible={controlsOpen} />
+      <AiControlsSheet onChange={updateSettings} onClose={() => setControlsOpen(false)} settings={settings} visible={controlsOpen} />
+      <ConversationSidebar
+        activeConversationId={activeConversationId}
+        conversations={conversations}
+        onClose={() => setSidebarOpen(false)}
+        onCreateConversation={startNewConversation}
+        onDeleteConversation={deleteConversation}
+        onOpenConversation={openConversation}
+        visible={sidebarOpen}
+      />
     </ScreenContainer>
   );
 }
@@ -230,7 +323,16 @@ const styles = StyleSheet.create({
     position: "relative",
     zIndex: 3,
   },
-  brandRow: { alignItems: "center", flexDirection: "row", gap: 10 },
+  headerLeft: { alignItems: "center", flexDirection: "row", gap: 9, flex: 1 },
+  brandRow: { alignItems: "center", flexDirection: "row", gap: 10, flexShrink: 1 },
+  sidebarButton: {
+    alignItems: "center",
+    backgroundColor: "#ECEBE8",
+    borderRadius: 18,
+    height: 36,
+    justifyContent: "center",
+    width: 36,
+  },
   logoMark: {
     alignItems: "center",
     backgroundColor: "#151515",
