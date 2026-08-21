@@ -61,8 +61,8 @@ export function ConversationSidebar({
             <Pressable onPress={onUpgradeLogin} style={({ pressed }) => [styles.upgradeButton, pressed && styles.pressed]}>
               <MaterialCommunityIcons color="#A93D35" name="account-arrow-up-outline" size={17} />
               <View style={styles.upgradeCopy}>
-                <Text style={styles.upgradeTitle}>Unlock ALSI and Pro</Text>
-                <Text style={styles.upgradeBody}>Log in for 100 renewable tokens</Text>
+                <Text style={styles.upgradeTitle}>Log in to existing account</Text>
+                <Text style={styles.upgradeBody}>Verify your email — saved tokens stay safe</Text>
               </View>
               <MaterialCommunityIcons color="#A93D35" name="chevron-right" size={18} />
             </Pressable>

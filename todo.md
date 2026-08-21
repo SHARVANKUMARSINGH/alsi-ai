@@ -26,3 +26,4 @@
 - [x] Create or load Supabase user records and synchronize logged-in token balances with the users table.
 - [x] Synchronize four-hour logged-in token renewals and selected-model usage deductions to Supabase.
 - [x] Validate EmailJS OTP, Supabase account, token model tiers, and Android export behavior.
+- [x] Add an existing-account login button that safely opens the EmailJS OTP flow without resetting locally stored account data.
