@@ -1,15 +1,18 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
+import type { AccountMode } from "@/lib/account";
 import { getConversationPreview, type Conversation } from "@/lib/conversations";
 
 type ConversationSidebarProps = {
+  accountMode: AccountMode;
   activeConversationId: string | null;
   conversations: Conversation[];
   onClose: () => void;
   onCreateConversation: () => void;
   onDeleteConversation: (id: string) => void;
   onOpenConversation: (conversation: Conversation) => void;
+  onUpgradeLogin: () => void;
   visible: boolean;
 };
 
@@ -24,12 +27,14 @@ function formatConversationDate(timestamp: number) {
 }
 
 export function ConversationSidebar({
+  accountMode,
   activeConversationId,
   conversations,
   onClose,
   onCreateConversation,
   onDeleteConversation,
   onOpenConversation,
+  onUpgradeLogin,
   visible,
 }: ConversationSidebarProps) {
   return (
@@ -51,6 +56,17 @@ export function ConversationSidebar({
             <MaterialCommunityIcons color="#FFFFFF" name="plus" size={19} />
             <Text style={styles.newChatText}>New conversation</Text>
           </Pressable>
+
+          {accountMode === "guest" ? (
+            <Pressable onPress={onUpgradeLogin} style={({ pressed }) => [styles.upgradeButton, pressed && styles.pressed]}>
+              <MaterialCommunityIcons color="#A93D35" name="account-arrow-up-outline" size={17} />
+              <View style={styles.upgradeCopy}>
+                <Text style={styles.upgradeTitle}>Unlock ALSI and Pro</Text>
+                <Text style={styles.upgradeBody}>Log in for 100 renewable tokens</Text>
+              </View>
+              <MaterialCommunityIcons color="#A93D35" name="chevron-right" size={18} />
+            </Pressable>
+          ) : null}
 
           <Text style={styles.sectionLabel}>CHAT HISTORY</Text>
           <FlatList
@@ -131,6 +147,10 @@ const styles = StyleSheet.create({
   closeButton: { alignItems: "center", backgroundColor: "#EBEAE7", borderRadius: 17, height: 34, justifyContent: "center", width: 34 },
   newChatButton: { alignItems: "center", backgroundColor: "#171716", borderRadius: 15, flexDirection: "row", gap: 8, justifyContent: "center", marginBottom: 25, paddingVertical: 14 },
   newChatText: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
+  upgradeButton: { alignItems: "center", backgroundColor: "#FFF1EE", borderColor: "#F4CBC5", borderRadius: 14, borderWidth: 1, flexDirection: "row", gap: 8, marginBottom: 17, padding: 10 },
+  upgradeCopy: { flex: 1 },
+  upgradeTitle: { color: "#A43B33", fontSize: 12, fontWeight: "800" },
+  upgradeBody: { color: "#AD6B65", fontSize: 10, marginTop: 2 },
   sectionLabel: { color: "#8A8884", fontSize: 10, fontWeight: "800", letterSpacing: 0.9, marginBottom: 8, paddingLeft: 4 },
   list: { gap: 6, paddingBottom: 16 },
   emptyList: { flexGrow: 1, justifyContent: "center", paddingBottom: 50 },

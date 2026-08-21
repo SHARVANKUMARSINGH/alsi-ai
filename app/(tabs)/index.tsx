@@ -1,6 +1,8 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
@@ -16,8 +18,20 @@ import {
 import { AiControlsSheet } from "@/components/ai-controls-sheet";
 import { ChatMessage } from "@/components/chat-message";
 import { ConversationSidebar } from "@/components/conversation-sidebar";
+import { LoginScreen } from "@/components/login-screen";
+import { ModelSelector } from "@/components/model-selector";
 import { ThinkingIndicator } from "@/components/thinking-indicator";
 import { ScreenContainer } from "@/components/screen-container";
+import {
+  canAccessModel,
+  chargeTokens,
+  createGuestAccount,
+  createLoggedInAccount,
+  loadStoredAccount,
+  refreshAccountTokens,
+  saveStoredAccount,
+  type StoredAccount,
+} from "@/lib/account";
 import { createMessage, getModeSummary, type ChatMessage as ChatMessageType, type ChatSettings } from "@/lib/chat";
 import {
   appendMessageToConversation,
@@ -27,6 +41,7 @@ import {
   sortConversations,
   type Conversation,
 } from "@/lib/conversations";
+import { getAlsiModel, type AlsiModelId } from "@/lib/models";
 import { trpc } from "@/lib/trpc";
 
 const starterPrompts = [
@@ -48,6 +63,10 @@ export default function HomeScreen() {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [account, setAccount] = useState<StoredAccount | null>(null);
+  const [accountReady, setAccountReady] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const outOfTokenAlertShown = useRef(false);
   const completion = trpc.chat.complete.useMutation();
   const isSending = completion.isPending;
   const activeConversation = useMemo(
@@ -56,6 +75,51 @@ export default function HomeScreen() {
   );
   const messages = activeConversation?.messages ?? [];
   const settings = activeConversation?.settings ?? defaultSettings;
+  const selectedModel = getAlsiModel(account?.selectedModelId ?? "lite");
+  const outOfTokens = account ? account.tokens < selectedModel.tokenCost : false;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadStoredAccount().then((storedAccount) => {
+      if (!isMounted) return;
+      setAccount(storedAccount);
+      setAccountReady(true);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!account) return;
+    saveStoredAccount(account).catch(() => undefined);
+  }, [account]);
+
+  useEffect(() => {
+    const renewIfNeeded = () => {
+      setAccount((previous) => {
+        if (!previous) return previous;
+        return refreshAccountTokens(previous);
+      });
+    };
+
+    renewIfNeeded();
+    const interval = setInterval(renewIfNeeded, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (outOfTokens && !outOfTokenAlertShown.current) {
+      Alert.alert("Out of tokens", "Out of tokens. Log in or wait for your 4-hour renewal.");
+      outOfTokenAlertShown.current = true;
+    }
+
+    if (!outOfTokens) {
+      outOfTokenAlertShown.current = false;
+    }
+  }, [outOfTokens]);
 
   useEffect(() => {
     let isMounted = true;
@@ -118,6 +182,14 @@ export default function HomeScreen() {
     const content = draft.trim();
     if (!content || isSending) return;
 
+    if (!account) return;
+    const refreshedAccount = refreshAccountTokens(account);
+    const chargedAccount = chargeTokens(refreshedAccount, selectedModel.tokenCost);
+    if (!chargedAccount) {
+      Alert.alert("Out of tokens", "Out of tokens. Log in or wait for your 4-hour renewal.");
+      return;
+    }
+
     Keyboard.dismiss();
     const conversation = activeConversation ?? createConversation(defaultSettings);
     const userMessage = createMessage("user", content);
@@ -135,6 +207,7 @@ export default function HomeScreen() {
       return sortConversations(next);
     });
     setActiveConversationId(conversation.id);
+    setAccount(chargedAccount);
     setDraft("");
 
     try {
@@ -142,6 +215,7 @@ export default function HomeScreen() {
         messages: requestMessages,
         mode: conversation.settings.mode,
         aggression: conversation.settings.aggression,
+        modelId: selectedModel.id,
       });
       const assistantMessage = createMessage("assistant", response.content);
       updateConversation(conversation.id, (current) => appendMessageToConversation(current, assistantMessage));
@@ -150,7 +224,7 @@ export default function HomeScreen() {
       const errorMessage = createMessage("assistant", explanation, { isError: true });
       updateConversation(conversation.id, (current) => appendMessageToConversation(current, errorMessage));
     }
-  }, [activeConversation, completion, draft, isSending, updateConversation]);
+  }, [account, activeConversation, completion, draft, isSending, selectedModel, updateConversation]);
 
   const openConversation = useCallback((conversation: Conversation) => {
     setActiveConversationId(conversation.id);
@@ -168,6 +242,26 @@ export default function HomeScreen() {
       return next;
     });
   }, [activeConversationId]);
+
+  const login = useCallback((identifier: string) => {
+    setAccount(createLoggedInAccount(identifier));
+    setLoginOpen(false);
+  }, []);
+
+  const continueAsGuest = useCallback(() => {
+    setAccount((previous) => previous ?? createGuestAccount());
+    setLoginOpen(false);
+  }, []);
+
+  const selectModel = useCallback((modelId: AlsiModelId) => {
+    if (!account) return;
+    if (!canAccessModel(account, modelId)) {
+      Alert.alert("Log in to use heavier models", "Guest Mode includes Notern Code Mini. Log in to unlock ALSI and Alsi Pro.");
+      return;
+    }
+
+    setAccount((previous) => previous ? { ...previous, selectedModelId: modelId } : previous);
+  }, [account]);
 
   const renderItem = useCallback(({ item }: ListRenderItemInfo<ChatMessageType>) => <ChatMessage message={item} />, []);
 
@@ -191,6 +285,21 @@ export default function HomeScreen() {
     </View>
   );
 
+  if (!accountReady) {
+    return (
+      <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-background">
+        <View style={styles.accountLoading}>
+          <ActivityIndicator color="#FF5A4F" size="small" />
+          <Text style={styles.accountLoadingText}>Preparing your ALSI Ai space…</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (!account || loginOpen) {
+    return <LoginScreen onContinueAsGuest={continueAsGuest} onLogin={login} />;
+  }
+
   return (
     <ScreenContainer edges={["top", "left", "right", "bottom"]} containerClassName="bg-background">
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
@@ -211,12 +320,16 @@ export default function HomeScreen() {
               <Text style={styles.title}>ALSI Ai</Text>
               <View style={styles.statusRow}>
                 <View style={styles.statusDot} />
-                <Text style={styles.statusText}>Ready for your next thought</Text>
+                <Text style={styles.statusText}>{account.mode === "guest" ? "Guest mode" : "Logged in"}</Text>
               </View>
             </View>
             </View>
           </View>
           <View style={styles.headerActions}>
+            <View accessibilityLabel={`${account.tokens} tokens available`} style={styles.tokenBadge}>
+              <MaterialCommunityIcons color="#B4443C" name="lightning-bolt" size={14} />
+              <Text style={styles.tokenText}>{account.tokens}</Text>
+            </View>
             <Pressable
               accessibilityLabel="Open response controls"
               onPress={() => setControlsOpen(true)}
@@ -247,6 +360,7 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
         />
 
+        <ModelSelector accountMode={account.mode} onSelectModel={selectModel} selectedModelId={account.selectedModelId} />
         <View style={styles.composerArea}>
           <View style={styles.modePill}>
             <MaterialCommunityIcons color="#B5433A" name={settings.mode === "thinking" ? "head-snowflake-outline" : "message-processing-outline"} size={14} />
@@ -256,12 +370,12 @@ export default function HomeScreen() {
           <View style={styles.composer}>
             <TextInput
               accessibilityLabel="Message ALSI Ai"
-              editable={!isSending}
+              editable={!isSending && !outOfTokens}
               maxLength={4000}
               multiline
               onChangeText={setDraft}
               onSubmitEditing={sendMessage}
-              placeholder="Message ALSI Ai..."
+              placeholder={outOfTokens ? "Out of tokens — log in or wait for renewal" : `Message ${selectedModel.label}...`}
               placeholderTextColor="#969491"
               returnKeyType="send"
               style={styles.input}
@@ -276,11 +390,11 @@ export default function HomeScreen() {
             </Pressable>
             <Pressable
               accessibilityLabel="Send message"
-              disabled={!draft.trim() || isSending}
+              disabled={!draft.trim() || isSending || outOfTokens}
               onPress={sendMessage}
               style={({ pressed }) => [
                 styles.sendButton,
-                (!draft.trim() || isSending) && styles.sendButtonDisabled,
+                (!draft.trim() || isSending || outOfTokens) && styles.sendButtonDisabled,
                 pressed && styles.pressed,
               ]}
             >
@@ -291,18 +405,21 @@ export default function HomeScreen() {
               )}
             </Pressable>
           </View>
+          {outOfTokens ? <Text style={styles.tokenWarning}>Out of tokens. Log in or wait for your 4-hour renewal.</Text> : null}
           <Text style={styles.disclaimer}>ALSI Ai can make mistakes. Check important information.</Text>
         </View>
       </KeyboardAvoidingView>
 
       <AiControlsSheet onChange={updateSettings} onClose={() => setControlsOpen(false)} settings={settings} visible={controlsOpen} />
       <ConversationSidebar
+        accountMode={account.mode}
         activeConversationId={activeConversationId}
         conversations={conversations}
         onClose={() => setSidebarOpen(false)}
         onCreateConversation={startNewConversation}
         onDeleteConversation={deleteConversation}
         onOpenConversation={openConversation}
+        onUpgradeLogin={() => { setSidebarOpen(false); setLoginOpen(true); }}
         visible={sidebarOpen}
       />
     </ScreenContainer>
@@ -311,6 +428,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  accountLoading: { alignItems: "center", flex: 1, gap: 12, justifyContent: "center" },
+  accountLoadingText: { color: "#797671", fontSize: 13, fontWeight: "600" },
   header: {
     alignItems: "center",
     backgroundColor: "#F7F7F5",
@@ -346,7 +465,9 @@ const styles = StyleSheet.create({
   statusRow: { alignItems: "center", flexDirection: "row", gap: 5, marginTop: 2 },
   statusDot: { backgroundColor: "#42A77B", borderRadius: 3, height: 6, width: 6 },
   statusText: { color: "#84827F", fontSize: 10, fontWeight: "600" },
-  headerActions: { flexDirection: "row", gap: 7 },
+  headerActions: { alignItems: "center", flexDirection: "row", gap: 7 },
+  tokenBadge: { alignItems: "center", backgroundColor: "#FFF0EE", borderRadius: 14, flexDirection: "row", gap: 3, height: 29, paddingHorizontal: 8 },
+  tokenText: { color: "#A63D35", fontSize: 12, fontWeight: "800" },
   headerButton: {
     alignItems: "center",
     backgroundColor: "#ECEBE8",
@@ -415,6 +536,7 @@ const styles = StyleSheet.create({
   composerControl: { alignItems: "center", height: 40, justifyContent: "center", width: 34 },
   sendButton: { alignItems: "center", backgroundColor: "#151515", borderRadius: 16, height: 40, justifyContent: "center", marginLeft: 2, width: 40 },
   sendButtonDisabled: { backgroundColor: "#ECEBE8" },
+  tokenWarning: { color: "#B4443C", fontSize: 10, fontWeight: "700", paddingHorizontal: 4, paddingTop: 7, textAlign: "center" },
   disclaimer: { color: "#A19F9B", fontSize: 10, paddingBottom: 6, paddingTop: 8, textAlign: "center" },
   pressed: { opacity: 0.76, transform: [{ scale: 0.97 }] },
 });

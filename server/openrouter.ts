@@ -1,4 +1,6 @@
 export const OPENROUTER_CHAT_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+import { getAlsiModel, type AlsiModelId } from "../lib/models";
+
 export const ALSI_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
 
 export type OpenRouterChatMessage = {
@@ -9,6 +11,7 @@ export type OpenRouterChatMessage = {
 export type OpenRouterSettings = {
   mode: "normal" | "thinking";
   aggression: 0 | 1 | 2 | 3;
+  modelId: AlsiModelId;
 };
 
 export const temperatureByAggression: Record<OpenRouterSettings["aggression"], number> = {
@@ -30,8 +33,10 @@ function getSystemInstruction(mode: OpenRouterSettings["mode"]) {
 }
 
 export function buildOpenRouterPayload(messages: OpenRouterChatMessage[], settings: OpenRouterSettings) {
+  const selectedModel = getAlsiModel(settings.modelId);
+
   return {
-    model: ALSI_MODEL,
+    model: selectedModel.openRouterModel,
     messages: [
       { role: "system" as const, content: getSystemInstruction(settings.mode) },
       ...messages,

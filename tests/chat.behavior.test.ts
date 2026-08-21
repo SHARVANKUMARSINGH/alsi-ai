@@ -6,7 +6,7 @@ describe("ALSI OpenRouter payload", () => {
   const messages = [{ role: "user" as const, content: "Explain magnetic fields." }];
 
   it("creates a direct balanced request in Normal mode", () => {
-    const payload = buildOpenRouterPayload(messages, { mode: "normal", aggression: 0 });
+    const payload = buildOpenRouterPayload(messages, { mode: "normal", aggression: 0, modelId: "pro" });
 
     expect(payload.model).toBe(ALSI_MODEL);
     expect(payload.temperature).toBe(0.7);
@@ -15,9 +15,10 @@ describe("ALSI OpenRouter payload", () => {
   });
 
   it("maps Thinking mode and maximum Aggressive Mode into a visible rationale request", () => {
-    const payload = buildOpenRouterPayload(messages, { mode: "thinking", aggression: 3 });
+    const payload = buildOpenRouterPayload(messages, { mode: "thinking", aggression: 3, modelId: "lite" });
 
     expect(payload.temperature).toBe(1.5);
+    expect(payload.model).toBe("meta-llama/llama-3-8b-instruct:free");
     expect(payload.messages[0].content).toContain("Reasoning summary");
     expect(payload.messages[0].content).toContain("Do not provide hidden chain-of-thought");
     expect(payload.messages).toHaveLength(2);
