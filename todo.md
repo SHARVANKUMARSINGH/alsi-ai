@@ -37,3 +37,7 @@
 - [x] Redesign Login with explicit Verify your Email and Skip Guest Mode top choices.
 - [x] Preserve guest tokens, verified-user four-hour token renewal, and tiered model access through the Supabase OTP migration.
 - [x] Validate the Supabase OTP login flow, token sync, and Android export.
+- [x] Remove Supabase and EmailJS dependencies and add react-native-appwrite for native OTP and token storage.
+- [x] Implement Appwrite email-token creation, session verification, and users collection lookup or creation.
+- [x] Synchronize verified-user token renewals and model deductions to the Appwrite users collection.
+- [x] Validate Appwrite authentication, token persistence, model restrictions, and Android export.

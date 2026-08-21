@@ -3,7 +3,7 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
-import { requestSupabaseOtp, verifySupabaseOtp } from "@/lib/supabase-otp";
+import { requestAppwriteOtp, verifyAppwriteOtp } from "@/lib/appwrite-account";
 
 type LoginScreenProps = {
   onContinueAsGuest: () => void;
@@ -17,6 +17,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
+  const [otpUserId, setOtpUserId] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,8 +42,9 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
     setIsSending(true);
     setError(null);
     try {
-      await requestSupabaseOtp(normalizedEmail);
+      const token = await requestAppwriteOtp(normalizedEmail);
       setOtpEmail(normalizedEmail);
+      setOtpUserId(token.userId);
       setCode("");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We could not send the verification code. Please try again.");
@@ -52,7 +54,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
   };
 
   const verifyOtp = async () => {
-    if (!otpEmail) return;
+    if (!otpEmail || !otpUserId) return;
     if (code.length !== 6) {
       setError("Enter the six-digit code from your email.");
       return;
@@ -61,7 +63,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
     setIsVerifying(true);
     setError(null);
     try {
-      await verifySupabaseOtp(otpEmail, code);
+      await verifyAppwriteOtp(otpUserId, code);
       await onLogin(otpEmail);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We could not finish signing you in. Please try again.");
@@ -120,7 +122,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
               {!isOtpStep ? (
                 <>
                   <Text style={styles.formTitle}>Verify your email</Text>
-                  <Text style={styles.formBody}>Supabase will send a secure six-digit verification code to your inbox.</Text>
+                  <Text style={styles.formBody}>Appwrite will send a secure six-digit verification code to your inbox.</Text>
                   <Text style={styles.label}>EMAIL ADDRESS</Text>
                   <View style={styles.inputShell}>
                     <MaterialCommunityIcons color="#797773" name="email-outline" size={19} />
@@ -140,14 +142,14 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
                   </View>
                   {error ? <Text style={styles.validation}>{error}</Text> : null}
                   <Pressable disabled={isSending} onPress={sendOtp} style={({ pressed }) => [styles.loginButton, isSending && styles.disabled, pressed && styles.pressed]}>
-                    <Text style={styles.loginButtonText}>{isSending ? "Sending code..." : "Send Supabase OTP"}</Text>
+                    <Text style={styles.loginButtonText}>{isSending ? "Sending code..." : "Send Appwrite OTP"}</Text>
                     <MaterialCommunityIcons color="#FFFFFF" name="email-fast-outline" size={18} />
                   </Pressable>
                 </>
               ) : (
                 <>
                   <Text style={styles.formTitle}>Check your inbox</Text>
-                  <Text style={styles.formBody}>Enter the six-digit Supabase code sent to {otpEmail}.</Text>
+                  <Text style={styles.formBody}>Enter the six-digit Appwrite code sent to {otpEmail}.</Text>
                   <Text style={styles.label}>ONE-TIME CODE</Text>
                   <View style={styles.inputShell}>
                     <MaterialCommunityIcons color="#797773" name="shield-key-outline" size={19} />
@@ -175,7 +177,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
                     <MaterialCommunityIcons color="#A93D35" name="refresh" size={16} />
                     <Text style={styles.resendText}>{isSending ? "Sending..." : "Resend code"}</Text>
                   </Pressable>
-                  <Pressable onPress={() => { setOtpEmail(null); setCode(""); setError(null); }} style={({ pressed }) => [styles.changeEmailButton, pressed && styles.pressed]}>
+                  <Pressable onPress={() => { setOtpEmail(null); setOtpUserId(null); setCode(""); setError(null); }} style={({ pressed }) => [styles.changeEmailButton, pressed && styles.pressed]}>
                     <Text style={styles.changeEmailText}>Use a different email</Text>
                   </Pressable>
                 </>

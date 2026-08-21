@@ -41,7 +41,7 @@ import {
   type Conversation,
 } from "@/lib/conversations";
 import { getAlsiModel, type AlsiModelId } from "@/lib/models";
-import { loadOrCreateSupabaseAccount, saveSupabaseAccount } from "@/lib/supabase-account";
+import { loadOrCreateAppwriteAccount, saveAppwriteAccount } from "@/lib/appwrite-account";
 import { trpc } from "@/lib/trpc";
 
 const starterPrompts = [
@@ -96,7 +96,7 @@ export default function HomeScreen() {
     if (!account) return;
     saveStoredAccount(account).catch(() => undefined);
     if (account.mode === "loggedIn") {
-      saveSupabaseAccount(account).catch(() => undefined);
+      saveAppwriteAccount(account).catch(() => undefined);
     }
   }, [account]);
 
@@ -247,8 +247,8 @@ export default function HomeScreen() {
   }, [activeConversationId]);
 
   const login = useCallback(async (email: string) => {
-    const supabaseAccount = await loadOrCreateSupabaseAccount(email);
-    setAccount(refreshAccountTokens(supabaseAccount));
+    const appwriteAccount = await loadOrCreateAppwriteAccount(email);
+    setAccount(refreshAccountTokens(appwriteAccount));
     setLoginOpen(false);
   }, []);
 
