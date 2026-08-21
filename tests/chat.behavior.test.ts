@@ -18,7 +18,7 @@ describe("ALSI OpenRouter payload", () => {
     const payload = buildOpenRouterPayload(messages, { mode: "thinking", aggression: 3, modelId: "lite" });
 
     expect(payload.temperature).toBe(1.5);
-    expect(payload.model).toBe("meta-llama/llama-3-8b-instruct:free");
+    expect(payload.model).toBe("liquid/lfm-2.5-2.6b:free");
     expect(payload.messages[0].content).toContain("Reasoning summary");
     expect(payload.messages[0].content).toContain("Do not provide hidden chain-of-thought");
     expect(payload.messages).toHaveLength(2);

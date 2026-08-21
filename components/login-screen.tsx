@@ -86,7 +86,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
               <MaterialCommunityIcons color="#B4443C" name="account-arrow-right-outline" size={19} />
               <Text style={styles.guestButtonText}>Skip Login (Continue as Guest)</Text>
             </Pressable>
-            <Text style={styles.guestNote}>Guest access includes 30 one-time tokens and Notern Code Mini.</Text>
+            <Text style={styles.guestNote}>Guest access includes 30 one-time tokens and ALSI Lite.</Text>
           </View>
         </View>
       </KeyboardAvoidingView>

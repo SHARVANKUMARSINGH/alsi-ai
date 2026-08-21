@@ -17,3 +17,7 @@
 - [x] Display token balance and add guest-restricted tiered model selection to the chat UI.
 - [x] Charge model-specific token costs and send the chosen OpenRouter model in each AI request.
 - [x] Validate authentication navigation, token logic, model access restrictions, and Android export.
+- [ ] Add server-side email OTP issuance with short expiry, resend handling, and verification safeguards.
+- [ ] Add an in-app email-code entry step that completes login only after successful verification.
+- [ ] Validate the email verification flow, including expiry and invalid-code handling.
+- [x] Rename the Lite tier to ALSI Lite and use Liquid LFM 2.5 2.6B as its OpenRouter model mapping.

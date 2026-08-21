@@ -7,9 +7,9 @@ describe("ALSI model tiers", () => {
     expect(alsiModels).toEqual([
       {
         id: "lite",
-        label: "Notern Code Mini",
+        label: "ALSI Lite",
         description: "Fast everyday help",
-        openRouterModel: "meta-llama/llama-3-8b-instruct:free",
+        openRouterModel: "liquid/lfm-2.5-2.6b:free",
         tokenCost: 1,
       },
       {
