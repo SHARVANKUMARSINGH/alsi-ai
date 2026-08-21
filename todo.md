@@ -41,3 +41,4 @@
 - [x] Implement Appwrite email-token creation, session verification, and users collection lookup or creation.
 - [x] Synchronize verified-user token renewals and model deductions to the Appwrite users collection.
 - [x] Validate Appwrite authentication, token persistence, model restrictions, and Android export.
+- [x] Inspect and checkpoint any remaining unpackaged ALSI Ai project changes.
