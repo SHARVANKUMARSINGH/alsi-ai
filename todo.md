@@ -30,3 +30,4 @@
 - [x] Inspect and checkpoint any remaining uncommitted ALSI Ai project changes.
 - [x] Replace the browser-only EmailJS SDK with the EmailJS REST API and configure Supabase to avoid React Native location access.
 - [x] Validate the corrected Login screen and Android export without browser-specific runtime errors.
+- [x] Diagnose and fix the Android Gradle build failure reported by the EAS build job.
