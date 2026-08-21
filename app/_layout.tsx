@@ -1,3 +1,4 @@
+import "react-native-url-polyfill/auto";
 import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";

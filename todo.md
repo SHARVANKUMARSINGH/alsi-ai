@@ -17,7 +17,12 @@
 - [x] Display token balance and add guest-restricted tiered model selection to the chat UI.
 - [x] Charge model-specific token costs and send the chosen OpenRouter model in each AI request.
 - [x] Validate authentication navigation, token logic, model access restrictions, and Android export.
-- [ ] Add server-side email OTP issuance with short expiry, resend handling, and verification safeguards.
-- [ ] Add an in-app email-code entry step that completes login only after successful verification.
-- [ ] Validate the email verification flow, including expiry and invalid-code handling.
+- [x] Superseded: add server-side email OTP issuance with short expiry, resend handling, and verification safeguards; implemented the requested EmailJS client-side OTP delivery instead.
+- [x] Add an in-app email-code entry step that completes login only after successful verification.
+- [x] Validate the email verification flow, including expiry and invalid-code handling.
 - [x] Rename the Lite tier to ALSI Lite and use Liquid LFM 2.5 2.6B as its OpenRouter model mapping.
+- [x] Install the requested EmailJS, Supabase, URL-polyfill, and AsyncStorage dependencies.
+- [x] Replace local password login with EmailJS-delivered six-digit OTP verification and guest entry.
+- [x] Create or load Supabase user records and synchronize logged-in token balances with the users table.
+- [x] Synchronize four-hour logged-in token renewals and selected-model usage deductions to Supabase.
+- [x] Validate EmailJS OTP, Supabase account, token model tiers, and Android export behavior.

@@ -26,7 +26,6 @@ import {
   canAccessModel,
   chargeTokens,
   createGuestAccount,
-  createLoggedInAccount,
   loadStoredAccount,
   refreshAccountTokens,
   saveStoredAccount,
@@ -42,6 +41,7 @@ import {
   type Conversation,
 } from "@/lib/conversations";
 import { getAlsiModel, type AlsiModelId } from "@/lib/models";
+import { loadOrCreateSupabaseAccount, saveSupabaseAccount } from "@/lib/supabase-account";
 import { trpc } from "@/lib/trpc";
 
 const starterPrompts = [
@@ -95,6 +95,9 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!account) return;
     saveStoredAccount(account).catch(() => undefined);
+    if (account.mode === "loggedIn") {
+      saveSupabaseAccount(account).catch(() => undefined);
+    }
   }, [account]);
 
   useEffect(() => {
@@ -243,8 +246,9 @@ export default function HomeScreen() {
     });
   }, [activeConversationId]);
 
-  const login = useCallback((identifier: string) => {
-    setAccount(createLoggedInAccount(identifier));
+  const login = useCallback(async (email: string) => {
+    const supabaseAccount = await loadOrCreateSupabaseAccount(email);
+    setAccount(refreshAccountTokens(supabaseAccount));
     setLoginOpen(false);
   }, []);
 
@@ -256,7 +260,7 @@ export default function HomeScreen() {
   const selectModel = useCallback((modelId: AlsiModelId) => {
     if (!account) return;
     if (!canAccessModel(account, modelId)) {
-      Alert.alert("Log in to use heavier models", "Guest Mode includes Notern Code Mini. Log in to unlock ALSI and Alsi Pro.");
+      Alert.alert("Log in to use heavier models", "Guest Mode includes ALSI Lite. Log in to unlock ALSI and Alsi Pro.");
       return;
     }
 
