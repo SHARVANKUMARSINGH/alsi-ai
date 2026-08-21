@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@emailjs/browser':
-        specifier: ^4.4.1
-        version: 4.4.1
       '@expo/vector-icons':
         specifier: ^15.0.3
         version: 15.0.3(expo-font@14.0.10(expo@54.0.29)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -743,10 +740,6 @@ packages:
   '@egjs/hammerjs@2.0.17':
     resolution: {integrity: sha512-XQsZgjm2EcVUiZQf11UBJQfmZeEmOW8DpI1gsFeln6w0ae0ii4dMQEQ0kjl6DspdWX1aGY1/loyXnP0JS06e/A==}
     engines: {node: '>=0.8.0'}
-
-  '@emailjs/browser@4.4.1':
-    resolution: {integrity: sha512-DGSlP9sPvyFba3to2A50kDtZ+pXVp/0rhmqs2LmbMS3I5J8FSOgLwzY2Xb4qfKlOVHh29EAutLYwe5yuEZmEFg==}
-    engines: {node: '>=14.0.0'}
 
   '@emnapi/core@1.7.1':
     resolution: {integrity: sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg==}
@@ -6823,8 +6816,6 @@ snapshots:
   '@egjs/hammerjs@2.0.17':
     dependencies:
       '@types/hammerjs': 2.0.46
-
-  '@emailjs/browser@4.4.1': {}
 
   '@emnapi/core@1.7.1':
     dependencies:

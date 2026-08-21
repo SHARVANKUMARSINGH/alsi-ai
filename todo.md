@@ -28,3 +28,5 @@
 - [x] Validate EmailJS OTP, Supabase account, token model tiers, and Android export behavior.
 - [x] Add an existing-account login button that safely opens the EmailJS OTP flow without resetting locally stored account data.
 - [x] Inspect and checkpoint any remaining uncommitted ALSI Ai project changes.
+- [x] Replace the browser-only EmailJS SDK with the EmailJS REST API and configure Supabase to avoid React Native location access.
+- [x] Validate the corrected Login screen and Android export without browser-specific runtime errors.
