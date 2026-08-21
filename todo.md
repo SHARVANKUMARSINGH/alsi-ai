@@ -32,3 +32,8 @@
 - [x] Validate the corrected Login screen and Android export without browser-specific runtime errors.
 - [x] Diagnose and fix the Android Gradle build failure reported by the EAS build job.
 - [x] Diagnose and fix the EmailJS OTP delivery failure shown in the Android Login screen.
+- [x] Superseded: resolve the EmailJS authorization rejection displayed during device OTP delivery; EmailJS has been removed in favor of Supabase native OTP.
+- [x] Remove EmailJS code and replace delivery with Supabase native signInWithOtp and verifyOtp authentication.
+- [x] Redesign Login with explicit Verify your Email and Skip Guest Mode top choices.
+- [x] Preserve guest tokens, verified-user four-hour token renewal, and tiered model access through the Supabase OTP migration.
+- [x] Validate the Supabase OTP login flow, token sync, and Android export.
