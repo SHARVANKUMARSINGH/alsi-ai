@@ -73,3 +73,5 @@
 - [x] Validate that the Expo export token is available without exposing its value.
 - [x] Inspect and remove any legacy Expo owner or EAS project identifier from application configuration; none is present in the dynamic Expo configuration.
 - [x] Validate the clean Expo configuration and prepare a safe account-initialization handoff for a new Android build.
+- [x] Replace the Expo export credential with the newly supplied key.
+- [x] Validate the replacement Expo credential through Expo’s GraphQL account endpoint.
