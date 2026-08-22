@@ -7,6 +7,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import {
   OPENROUTER_CHAT_ENDPOINT,
+  buildAttachmentAwareMessages,
   buildOpenRouterPayload,
   userSafeOpenRouterError,
 } from "./openrouter";
@@ -68,24 +69,7 @@ export const appRouter = router({
           },
           body: JSON.stringify(
             buildOpenRouterPayload(
-              input.imageBase64
-                ? input.messages.map((message, index) =>
-                    index === input.messages.length - 1 && message.role === "user"
-                      ? {
-                          ...message,
-                          content: [
-                            { type: "text" as const, text: message.content },
-                            {
-                              type: "image_url" as const,
-                              image_url: {
-                                url: `data:${input.imageMediaType ?? "image/jpeg"};base64,${input.imageBase64}`,
-                              },
-                            },
-                          ],
-                        }
-                      : message,
-                  )
-                : input.messages,
+              buildAttachmentAwareMessages(input.messages, input.imageBase64, input.imageMediaType),
               input,
             ),
           ),

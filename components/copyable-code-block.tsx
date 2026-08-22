@@ -3,8 +3,6 @@ import * as Clipboard from "expo-clipboard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { getCodeLanguageLabel } from "@/lib/code-language";
-
 type CopyableCodeBlockProps = {
   code: string;
   language: string;

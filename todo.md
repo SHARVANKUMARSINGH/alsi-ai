@@ -56,3 +56,7 @@
 - [x] Add an enabled-by-default Quick Copy Buttons preference to AI response controls.
 - [x] Generate each new conversation title from its opening exchange rather than copying the first prompt.
 - [x] Validate adaptive icon configuration, code copying, generated titles, and Android export.
+- [x] Superseded: restore ALSI Lite and Standard with independently selected reliable routes; the user supplied the exact text-and-vision model matrix to implement instead.
+- [x] Validate text and image routing contracts across the repaired Lite and Standard tiers.
+- [x] Route all ALSI tiers to the user-specified text or vision OpenRouter model according to image attachment state.
+- [x] Validate strict string-only and text-plus-data-URI image payload formats for every tier.

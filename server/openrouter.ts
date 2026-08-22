@@ -1,7 +1,7 @@
 export const OPENROUTER_CHAT_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-import { getAlsiModel, type AlsiModelId } from "../lib/models";
+import { getOpenRouterModel, type AlsiModelId } from "../lib/models";
 
-export const ALSI_MODEL = getAlsiModel("pro").openRouterModel;
+export const ALSI_MODEL = getOpenRouterModel("pro", false);
 
 export type OpenRouterContentPart =
   | { type: "text"; text: string }
@@ -11,6 +11,38 @@ export type OpenRouterChatMessage = {
   role: "user" | "assistant";
   content: string | OpenRouterContentPart[];
 };
+
+function isImageContentPart(part: OpenRouterContentPart) {
+  return part.type === "image_url";
+}
+
+export function buildAttachmentAwareMessages(
+  messages: OpenRouterChatMessage[],
+  imageBase64?: string,
+  imageMediaType = "image/jpeg",
+) {
+  if (!imageBase64) return messages;
+
+  let latestUserMessageIndex = -1;
+  messages.forEach((message, index) => {
+    if (message.role === "user") latestUserMessageIndex = index;
+  });
+
+  return messages.map((message, index) =>
+    index === latestUserMessageIndex && message.role === "user"
+      ? {
+          ...message,
+          content: [
+            { type: "text" as const, text: typeof message.content === "string" ? message.content : "" },
+            {
+              type: "image_url" as const,
+              image_url: { url: `data:${imageMediaType};base64,${imageBase64}` },
+            },
+          ],
+        }
+      : message,
+  );
+}
 
 export type OpenRouterSettings = {
   mode: "normal" | "thinking";
@@ -37,10 +69,12 @@ function getSystemInstruction(mode: OpenRouterSettings["mode"]) {
 }
 
 export function buildOpenRouterPayload(messages: OpenRouterChatMessage[], settings: OpenRouterSettings) {
-  const selectedModel = getAlsiModel(settings.modelId);
+  const usesVision = messages.some(
+    (message) => Array.isArray(message.content) && message.content.some(isImageContentPart),
+  );
 
   return {
-    model: selectedModel.openRouterModel,
+    model: getOpenRouterModel(settings.modelId, usesVision),
     messages: [
       { role: "system" as const, content: getSystemInstruction(settings.mode) },
       ...messages,
