@@ -69,3 +69,7 @@
 - [x] Rebuild the root legacy icon and adaptive foreground with centered 60% safe-zone artwork for Package Installer masking.
 - [x] Validate the requested model-routing, error fallback, and icon safe-zone changes.
 - [x] Retry rate-limited Lite and Standard Gemma vision requests through the verified OpenRouter Free multimodal router.
+- [x] Securely configure the provided Expo export token for Android export workflows.
+- [x] Validate that the Expo export token is available without exposing its value.
+- [x] Inspect and remove any legacy Expo owner or EAS project identifier from application configuration; none is present in the dynamic Expo configuration.
+- [x] Validate the clean Expo configuration and prepare a safe account-initialization handoff for a new Android build.
