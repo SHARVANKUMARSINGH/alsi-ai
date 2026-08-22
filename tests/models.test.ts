@@ -10,8 +10,8 @@ describe("ALSI model tiers", () => {
         label: "ALSI Lite",
         description: "Fast text and vision help",
         openRouterModel: {
-          text: "nvidia/llama-nemotron-rerank-vl-1b-v2:free",
-          vision: "meta-llama/llama-3.2-11b-vision-instruct:free",
+          text: "openrouter/free",
+          vision: "google/gemma-4-31b-it:free",
         },
         tokenCost: 1,
       },
@@ -20,8 +20,8 @@ describe("ALSI model tiers", () => {
         label: "ALSI",
         description: "Balanced text and vision analysis",
         openRouterModel: {
-          text: "poolside/laguna-s-2.1:free",
-          vision: "google/gemma-4-26b-a4b-it:free",
+          text: "openrouter/free",
+          vision: "google/gemma-4-31b-it:free",
         },
         tokenCost: 3,
       },
@@ -30,8 +30,8 @@ describe("ALSI model tiers", () => {
         label: "Alsi Pro",
         description: "Deep text and vision reasoning",
         openRouterModel: {
-          text: "nvidia/nemotron-3-ultra-550b-a55b:free",
-          vision: "dots-studio/dots3-note-preview:free",
+          text: "dots-studio/dots-3-note-preview:free",
+          vision: "openrouter/free",
         },
         tokenCost: 5,
       },
@@ -40,9 +40,9 @@ describe("ALSI model tiers", () => {
 
   it("resolves a selected tier by identifier", () => {
     expect(getAlsiModel("standard").tokenCost).toBe(3);
-    expect(getOpenRouterModel("lite", false)).toBe("nvidia/llama-nemotron-rerank-vl-1b-v2:free");
-    expect(getOpenRouterModel("standard", true)).toBe("google/gemma-4-26b-a4b-it:free");
-    expect(getOpenRouterModel("pro", false)).toBe("nvidia/nemotron-3-ultra-550b-a55b:free");
-    expect(getOpenRouterModel("pro", true)).toBe("dots-studio/dots3-note-preview:free");
+    expect(getOpenRouterModel("lite", false)).toBe("openrouter/free");
+    expect(getOpenRouterModel("standard", true)).toBe("google/gemma-4-31b-it:free");
+    expect(getOpenRouterModel("pro", false)).toBe("dots-studio/dots-3-note-preview:free");
+    expect(getOpenRouterModel("pro", true)).toBe("openrouter/free");
   });
 });

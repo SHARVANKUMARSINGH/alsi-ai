@@ -32,7 +32,7 @@ const env = {
   appSlug: "alsi-ai",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "/manus-storage/alsi-ai-icon_2efb3e42.png",
+  logoUrl: "/manus-storage/alsi-legacy-icon-safezone_c01c850a.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -58,8 +58,6 @@ const config: ExpoConfig = {
     adaptiveIcon: {
       backgroundColor: "#0D0D0D",
       foregroundImage: "./assets/images/android-icon-foreground.png",
-      backgroundImage: "./assets/images/android-icon-background.png",
-      monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,

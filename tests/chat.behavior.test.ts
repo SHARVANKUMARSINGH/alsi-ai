@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ALSI_MODEL, buildAttachmentAwareMessages, buildOpenRouterPayload } from "../server/openrouter";
+import { ALSI_MODEL, OPENROUTER_OVERLOAD_MESSAGE, buildAttachmentAwareMessages, buildOpenRouterPayload, parseOpenRouterCompletion, shouldUseFreeVisionFallback } from "../server/openrouter";
 
 describe("ALSI OpenRouter payload", () => {
   const messages = [{ role: "user" as const, content: "Explain magnetic fields." }];
@@ -18,7 +18,7 @@ describe("ALSI OpenRouter payload", () => {
     const payload = buildOpenRouterPayload(messages, { mode: "thinking", aggression: 3, modelId: "lite" });
 
     expect(payload.temperature).toBe(1.5);
-    expect(payload.model).toBe("nvidia/llama-nemotron-rerank-vl-1b-v2:free");
+    expect(payload.model).toBe("openrouter/free");
     expect(payload.messages[0].content).toContain("Reasoning summary");
     expect(payload.messages[0].content).toContain("Do not provide hidden chain-of-thought");
     expect(payload.messages).toHaveLength(2);
@@ -32,7 +32,7 @@ describe("ALSI OpenRouter payload", () => {
       modelId: "standard",
     });
 
-    expect(payload.model).toBe("poolside/laguna-s-2.1:free");
+    expect(payload.model).toBe("openrouter/free");
     expect(payload.messages[1].content).toBe("Explain magnetic fields.");
   });
 
@@ -48,10 +48,24 @@ describe("ALSI OpenRouter payload", () => {
       modelId: "standard",
     });
 
-    expect(payload.model).toBe("google/gemma-4-26b-a4b-it:free");
+    expect(payload.model).toBe("google/gemma-4-31b-it:free");
     expect(payload.messages[1].content).toEqual([
       { type: "text", text: "What is visible in this image?" },
       { type: "image_url", image_url: { url: "data:image/jpeg;base64,aW1hZ2U=" } },
     ]);
+  });
+
+  it("does not attempt JSON parsing for an upstream HTML or plain-text error body", () => {
+    expect(parseOpenRouterCompletion("<html>Gateway timeout</html>")).toBeNull();
+    expect(parseOpenRouterCompletion("error: provider unavailable")).toBeNull();
+    expect(OPENROUTER_OVERLOAD_MESSAGE).toBe("The AI server is currently overloaded. Please try again in a few seconds.");
+  });
+
+  it("retries unavailable Lite and Standard image routes through the free vision router", () => {
+    expect(shouldUseFreeVisionFallback("lite", true, 429)).toBe(true);
+    expect(shouldUseFreeVisionFallback("standard", true, 502)).toBe(true);
+    expect(shouldUseFreeVisionFallback("pro", true, 429)).toBe(false);
+    expect(shouldUseFreeVisionFallback("lite", false, 429)).toBe(false);
+    expect(shouldUseFreeVisionFallback("standard", true, 400)).toBe(false);
   });
 });

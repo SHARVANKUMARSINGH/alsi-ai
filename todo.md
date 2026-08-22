@@ -60,3 +60,12 @@
 - [x] Validate text and image routing contracts across the repaired Lite and Standard tiers.
 - [x] Route all ALSI tiers to the user-specified text or vision OpenRouter model according to image attachment state.
 - [x] Validate strict string-only and text-plus-data-URI image payload formats for every tier.
+- [x] Replace the failing model routes with verified working OpenRouter text and vision models for all ALSI tiers.
+- [x] Handle non-JSON upstream error bodies without exposing a JSON parse error in the chat UI.
+- [x] Correct the Android launcher icon asset and adaptive-icon configuration so an updated icon appears in a new Android build.
+- [x] Validate real model completions, error handling, and Android icon build output.
+- [x] Return a clean overload message when OpenRouter sends a non-JSON HTTP error response.
+- [x] Route ALSI Lite and Standard image prompts to Gemma 4 31B Free and ALSI Pro image prompts to the OpenRouter Free router.
+- [x] Rebuild the root legacy icon and adaptive foreground with centered 60% safe-zone artwork for Package Installer masking.
+- [x] Validate the requested model-routing, error fallback, and icon safe-zone changes.
+- [x] Retry rate-limited Lite and Standard Gemma vision requests through the verified OpenRouter Free multimodal router.

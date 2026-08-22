@@ -2,6 +2,7 @@ export const OPENROUTER_CHAT_ENDPOINT = "https://openrouter.ai/api/v1/chat/compl
 import { getOpenRouterModel, type AlsiModelId } from "../lib/models";
 
 export const ALSI_MODEL = getOpenRouterModel("pro", false);
+export const OPENROUTER_OVERLOAD_MESSAGE = "The AI server is currently overloaded. Please try again in a few seconds.";
 
 export type OpenRouterContentPart =
   | { type: "text"; text: string }
@@ -85,6 +86,14 @@ export function buildOpenRouterPayload(messages: OpenRouterChatMessage[], settin
   };
 }
 
+export function shouldUseFreeVisionFallback(
+  modelId: AlsiModelId,
+  hasImageAttachment: boolean,
+  status: number,
+) {
+  return hasImageAttachment && (modelId === "lite" || modelId === "standard") && (status === 429 || status >= 500);
+}
+
 export function userSafeOpenRouterError(status: number) {
   if (status === 401 || status === 403) {
     return "ALSI Ai's connection credentials need attention. Please try again shortly.";
@@ -96,4 +105,15 @@ export function userSafeOpenRouterError(status: number) {
     return "The AI service is temporarily unavailable. Please try your message again in a moment.";
   }
   return "ALSI Ai could not complete that request. Please try again.";
+}
+
+export function parseOpenRouterCompletion(rawBody: string): string | null {
+  try {
+    const completion = JSON.parse(rawBody) as {
+      choices?: Array<{ message?: { content?: string | null } }>;
+    };
+    return completion.choices?.[0]?.message?.content?.trim() || null;
+  } catch {
+    return null;
+  }
 }

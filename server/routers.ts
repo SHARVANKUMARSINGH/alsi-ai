@@ -7,9 +7,11 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import {
   OPENROUTER_CHAT_ENDPOINT,
+  OPENROUTER_OVERLOAD_MESSAGE,
   buildAttachmentAwareMessages,
   buildOpenRouterPayload,
-  userSafeOpenRouterError,
+  parseOpenRouterCompletion,
+  shouldUseFreeVisionFallback,
 } from "./openrouter";
 
 const chatMessageSchema = z.object({
@@ -28,10 +30,6 @@ const chatRequestSchema = z.object({
   imageBase64: imageBase64Schema.optional(),
   imageMediaType: imageMediaTypeSchema.optional(),
 });
-
-type OpenRouterResponse = {
-  choices?: Array<{ message?: { content?: string | null } }>;
-};
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -60,36 +58,49 @@ export const appRouter = router({
       const timeout = setTimeout(() => controller.abort(), 75_000);
 
       try {
-        const response = await fetch(OPENROUTER_CHAT_ENDPOINT, {
+        const requestMessages = buildAttachmentAwareMessages(input.messages, input.imageBase64, input.imageMediaType);
+        const primaryPayload = buildOpenRouterPayload(requestMessages, input);
+        const requestCompletion = (payload: typeof primaryPayload) =>
+          fetch(OPENROUTER_CHAT_ENDPOINT, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
             "X-Title": "ALSI Ai",
           },
-          body: JSON.stringify(
-            buildOpenRouterPayload(
-              buildAttachmentAwareMessages(input.messages, input.imageBase64, input.imageMediaType),
-              input,
-            ),
-          ),
+          body: JSON.stringify(payload),
           signal: controller.signal,
         });
 
+        let response = await requestCompletion(primaryPayload);
+
+        if (shouldUseFreeVisionFallback(input.modelId, Boolean(input.imageBase64), response.status)) {
+          const primaryErrorBody = await response.text();
+          console.warn("[ALSI OpenRouter] Retrying vision request with free router", {
+            status: response.status,
+            body: primaryErrorBody.slice(0, 500),
+          });
+          response = await requestCompletion({ ...primaryPayload, model: "openrouter/free" });
+        }
+
         if (!response.ok) {
-          console.error("[ALSI OpenRouter] Completion failed", { status: response.status });
+          const rawErrorBody = await response.text();
+          console.error("[ALSI OpenRouter] Completion failed", {
+            status: response.status,
+            body: rawErrorBody.slice(0, 500),
+          });
           throw new TRPCError({
-            code: response.status === 429 ? "TOO_MANY_REQUESTS" : "INTERNAL_SERVER_ERROR",
-            message: userSafeOpenRouterError(response.status),
+            code: "BAD_GATEWAY",
+            message: OPENROUTER_OVERLOAD_MESSAGE,
           });
         }
 
-        const completion = (await response.json()) as OpenRouterResponse;
-        const content = completion.choices?.[0]?.message?.content?.trim();
+        const rawCompletionBody = await response.text();
+        const content = parseOpenRouterCompletion(rawCompletionBody);
         if (!content) {
           throw new TRPCError({
             code: "BAD_GATEWAY",
-            message: "ALSI Ai received an empty response. Please try again.",
+            message: OPENROUTER_OVERLOAD_MESSAGE,
           });
         }
 
