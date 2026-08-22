@@ -7,12 +7,19 @@ export type ChatSettings = {
   aggression: AggressionLevel;
 };
 
+export type ChatImageAttachment = {
+  uri: string;
+  base64: string;
+  mimeType: string;
+};
+
 export type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
   createdAt: number;
   isError?: boolean;
+  attachment?: ChatImageAttachment;
 };
 
 export const aggressionLabels: Record<AggressionLevel, string> = {
@@ -32,7 +39,7 @@ export const aggressionTemperatures: Record<AggressionLevel, number> = {
 export function createMessage(
   role: ChatMessage["role"],
   content: string,
-  options?: Pick<ChatMessage, "isError">,
+  options?: Pick<ChatMessage, "isError" | "attachment">,
 ): ChatMessage {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -40,6 +47,7 @@ export function createMessage(
     content,
     createdAt: Date.now(),
     isError: options?.isError,
+    attachment: options?.attachment,
   };
 }
 

@@ -1,11 +1,15 @@
 export const OPENROUTER_CHAT_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 import { getAlsiModel, type AlsiModelId } from "../lib/models";
 
-export const ALSI_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
+export const ALSI_MODEL = getAlsiModel("pro").openRouterModel;
+
+export type OpenRouterContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
 
 export type OpenRouterChatMessage = {
   role: "user" | "assistant";
-  content: string;
+  content: string | OpenRouterContentPart[];
 };
 
 export type OpenRouterSettings = {

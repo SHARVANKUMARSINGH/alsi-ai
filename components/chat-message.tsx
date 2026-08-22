@@ -1,5 +1,5 @@
 import Markdown from "react-native-markdown-display";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 import type { ChatMessage as ChatMessageType } from "@/lib/chat";
 
@@ -34,6 +34,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
           message.isError && styles.errorBubble,
         ]}
       >
+        {message.attachment ? (
+          <Image accessibilityLabel="Attached image" source={{ uri: message.attachment.uri }} style={styles.attachmentImage} />
+        ) : null}
         {isUser || message.isError ? (
           <Text style={[styles.messageText, isUser ? styles.userText : styles.assistantText]}>
             {message.content}
@@ -105,6 +108,14 @@ const styles = StyleSheet.create({
   errorBubble: {
     backgroundColor: "#FFF5F4",
     borderColor: "#F2C6C1",
+  },
+  attachmentImage: {
+    alignSelf: "stretch",
+    backgroundColor: "#E7E5E1",
+    borderRadius: 13,
+    height: 180,
+    marginBottom: 10,
+    width: 240,
   },
   messageText: {
     fontSize: 16,

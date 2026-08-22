@@ -16,11 +16,16 @@ const chatMessageSchema = z.object({
   content: z.string().trim().min(1).max(4000),
 });
 
+const imageBase64Schema = z.string().min(4).max(6_000_000);
+const imageMediaTypeSchema = z.string().regex(/^image\/[a-z0-9.+-]+$/i).max(100);
+
 const chatRequestSchema = z.object({
   messages: z.array(chatMessageSchema).min(1).max(30),
   mode: z.enum(["normal", "thinking"]),
   aggression: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]),
   modelId: z.enum(["lite", "standard", "pro"]),
+  imageBase64: imageBase64Schema.optional(),
+  imageMediaType: imageMediaTypeSchema.optional(),
 });
 
 type OpenRouterResponse = {
@@ -61,7 +66,29 @@ export const appRouter = router({
             "Content-Type": "application/json",
             "X-Title": "ALSI Ai",
           },
-          body: JSON.stringify(buildOpenRouterPayload(input.messages, input)),
+          body: JSON.stringify(
+            buildOpenRouterPayload(
+              input.imageBase64
+                ? input.messages.map((message, index) =>
+                    index === input.messages.length - 1 && message.role === "user"
+                      ? {
+                          ...message,
+                          content: [
+                            { type: "text" as const, text: message.content },
+                            {
+                              type: "image_url" as const,
+                              image_url: {
+                                url: `data:${input.imageMediaType ?? "image/jpeg"};base64,${input.imageBase64}`,
+                              },
+                            },
+                          ],
+                        }
+                      : message,
+                  )
+                : input.messages,
+              input,
+            ),
+          ),
           signal: controller.signal,
         });
 

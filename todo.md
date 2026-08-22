@@ -46,3 +46,8 @@
 - [x] Handle existing Appwrite sessions safely during OTP verification without duplicate-session errors.
 - [x] Install and configure a React Native Markdown renderer for chat responses, including styled code blocks.
 - [x] Validate authentication persistence, Markdown bubbles, and Android export.
+- [x] Add Android keyboard resize behavior and a keyboard-safe chat composer.
+- [x] Add gallery image picking with base64 capture and attachment thumbnail previews.
+- [x] Send image and text content to OpenRouter vision models through a data-URI payload.
+- [x] Update the ALSI Lite, Standard, and Pro model mappings to the requested free vision-capable models.
+- [x] Validate image selection, vision payload creation, keyboard behavior, and Android export.

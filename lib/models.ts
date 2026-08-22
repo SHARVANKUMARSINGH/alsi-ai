@@ -12,22 +12,22 @@ export const alsiModels: readonly AlsiModel[] = [
   {
     id: "lite",
     label: "ALSI Lite",
-    description: "Fast everyday help",
-    openRouterModel: "liquid/lfm-2.5-2.6b:free",
+    description: "Fast vision-enabled help",
+    openRouterModel: "meta-llama/llama-3.2-11b-vision-instruct:free",
     tokenCost: 1,
   },
   {
     id: "standard",
     label: "ALSI",
-    description: "Balanced capability",
-    openRouterModel: "poolside/laguna-s-2.1:free",
+    description: "Balanced vision analysis",
+    openRouterModel: "nvidia/nemotron-nano-12b-vl:free",
     tokenCost: 3,
   },
   {
     id: "pro",
     label: "Alsi Pro",
-    description: "Deep reasoning and planning",
-    openRouterModel: "nvidia/nemotron-3-ultra-550b-a55b:free",
+    description: "Smart free-model routing",
+    openRouterModel: "openrouter/free",
     tokenCost: 5,
   },
 ] as const;
