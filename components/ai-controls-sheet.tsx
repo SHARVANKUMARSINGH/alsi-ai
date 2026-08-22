@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 import {
   aggressionLabels,
@@ -25,6 +25,7 @@ const modes: { id: ChatMode; label: string; icon: "message-processing-outline" |
 export function AiControlsSheet({ visible, settings, onChange, onClose }: AiControlsSheetProps) {
   const setMode = (mode: ChatMode) => onChange({ ...settings, mode });
   const setAggression = (aggression: AggressionLevel) => onChange({ ...settings, aggression });
+  const setQuickCopyButtons = (quickCopyButtons: boolean) => onChange({ ...settings, quickCopyButtons });
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
@@ -107,6 +108,20 @@ export function AiControlsSheet({ visible, settings, onChange, onClose }: AiCont
         <Text style={styles.temperatureNote}>
           Temperature: {aggressionTemperatures[settings.aggression].toFixed(1)}
         </Text>
+
+        <View style={styles.quickCopyRow}>
+          <View style={styles.quickCopyTextGroup}>
+            <Text style={styles.sectionLabel}>QUICK COPY BUTTONS</Text>
+            <Text style={styles.quickCopyCaption}>Show a one-tap Copy action on code blocks.</Text>
+          </View>
+          <Switch
+            accessibilityLabel="Enable Quick Copy Buttons"
+            onValueChange={setQuickCopyButtons}
+            thumbColor={settings.quickCopyButtons !== false ? "#FFFFFF" : "#F5F4F1"}
+            trackColor={{ false: "#C7C5C0", true: "#FF5A4F" }}
+            value={settings.quickCopyButtons !== false}
+          />
+        </View>
 
         <Pressable onPress={onClose} style={({ pressed }) => [styles.doneButton, pressed && styles.pressed]}>
           <Text style={styles.doneText}>Done</Text>
@@ -291,6 +306,28 @@ const styles = StyleSheet.create({
     color: "#777674",
     fontSize: 12,
     marginTop: 18,
+  },
+  quickCopyRow: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E6E4E0",
+    borderRadius: 16,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 18,
+    paddingHorizontal: 13,
+    paddingVertical: 12,
+  },
+  quickCopyTextGroup: {
+    flex: 1,
+    marginRight: 12,
+  },
+  quickCopyCaption: {
+    color: "#777674",
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 4,
   },
   doneButton: {
     alignItems: "center",

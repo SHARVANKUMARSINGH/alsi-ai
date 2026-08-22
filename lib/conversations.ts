@@ -23,9 +23,41 @@ function getTextPreview(content: string, limit: number) {
   return `${normalized.slice(0, Math.max(0, limit - 1)).trimEnd()}…`;
 }
 
+const titleStopWords = new Set([
+  "a", "an", "and", "are", "as", "at", "be", "can", "could", "do", "for", "from", "give", "help", "how", "i", "in", "into", "is", "it", "me", "my", "of", "on", "or", "please", "show", "tell", "that", "the", "to", "use", "what", "with", "would", "you", "your",
+]);
+
+const titleLeadVerbs = new Set([
+  "analyze", "brainstorm", "build", "create", "debug", "describe", "draft", "explain", "fix", "generate", "make", "outline", "plan", "summarize", "translate", "write",
+]);
+
+function titleCase(word: string) {
+  if (/^[A-Z0-9]{2,}$/.test(word)) return word;
+  return `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`;
+}
+
+export function generateConversationTitle(content: string) {
+  const words = content
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/[^\p{L}\p{N}#+]+/gu, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const topicWords = words
+    .filter((word, index) => {
+      const lowerCaseWord = word.toLowerCase();
+      return !titleStopWords.has(lowerCaseWord) && !(index === 0 && titleLeadVerbs.has(lowerCaseWord));
+    })
+    .slice(0, 5);
+
+  if (topicWords.length === 0) return "New conversation";
+  return getTextPreview(topicWords.map(titleCase).join(" "), 42);
+}
+
 export function getConversationTitle(messages: ChatMessage[]) {
   const firstUserMessage = messages.find((message) => message.role === "user" && !message.isError);
-  return firstUserMessage ? getTextPreview(firstUserMessage.content, 38) : "New conversation";
+  return firstUserMessage ? generateConversationTitle(firstUserMessage.content) : "New conversation";
 }
 
 export function getConversationPreview(messages: ChatMessage[]) {

@@ -51,3 +51,8 @@
 - [x] Send image and text content to OpenRouter vision models through a data-URI payload.
 - [x] Update the ALSI Lite, Standard, and Pro model mappings to the requested free vision-capable models.
 - [x] Validate image selection, vision payload creation, keyboard behavior, and Android export.
+- [x] Create a dark-background Android adaptive-icon foreground asset with a safe-zone logo.
+- [x] Install Expo Clipboard and add interactive Markdown code blocks with language labels and one-tap copy feedback.
+- [x] Add an enabled-by-default Quick Copy Buttons preference to AI response controls.
+- [x] Generate each new conversation title from its opening exchange rather than copying the first prompt.
+- [x] Validate adaptive icon configuration, code copying, generated titles, and Android export.

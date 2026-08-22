@@ -55,6 +55,7 @@ const starterPrompts = [
 const defaultSettings: ChatSettings = {
   mode: "normal",
   aggression: 0,
+  quickCopyButtons: true,
 };
 
 const MAX_IMAGE_BASE64_LENGTH = 6_000_000;
@@ -304,7 +305,12 @@ export default function HomeScreen() {
     setAccount((previous) => previous ? { ...previous, selectedModelId: modelId } : previous);
   }, [account]);
 
-  const renderItem = useCallback(({ item }: ListRenderItemInfo<ChatMessageType>) => <ChatMessage message={item} />, []);
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<ChatMessageType>) => (
+      <ChatMessage message={item} quickCopyButtons={settings.quickCopyButtons !== false} />
+    ),
+    [settings.quickCopyButtons],
+  );
 
   const emptyState = (
     <View style={styles.emptyState}>

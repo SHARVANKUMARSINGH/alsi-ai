@@ -5,6 +5,7 @@ export type AggressionLevel = 0 | 1 | 2 | 3;
 export type ChatSettings = {
   mode: ChatMode;
   aggression: AggressionLevel;
+  quickCopyButtons?: boolean;
 };
 
 export type ChatImageAttachment = {

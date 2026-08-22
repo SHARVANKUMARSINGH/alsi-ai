@@ -1,10 +1,19 @@
 import Markdown from "react-native-markdown-display";
+import { useMemo } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 
+import { CopyableCodeBlock, getCodeLanguageLabel } from "@/components/copyable-code-block";
 import type { ChatMessage as ChatMessageType } from "@/lib/chat";
 
 type ChatMessageProps = {
   message: ChatMessageType;
+  quickCopyButtons?: boolean;
+};
+
+type MarkdownFenceNode = {
+  key: string;
+  content: string;
+  sourceInfo?: string;
 };
 
 function timestamp(value: number) {
@@ -14,8 +23,25 @@ function timestamp(value: number) {
   }).format(value);
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+function createMarkdownRules(quickCopyButtons: boolean) {
+  const renderCodeBlock = (node: MarkdownFenceNode) => {
+    const code = node.content.endsWith("\n") ? node.content.slice(0, -1) : node.content;
+    return (
+      <CopyableCodeBlock
+        code={code}
+        key={node.key}
+        language={getCodeLanguageLabel(node.sourceInfo)}
+        showCopyButton={quickCopyButtons}
+      />
+    );
+  };
+
+  return { code_block: renderCodeBlock, fence: renderCodeBlock };
+}
+
+export function ChatMessage({ message, quickCopyButtons = true }: ChatMessageProps) {
   const isUser = message.role === "user";
+  const markdownRules = useMemo(() => createMarkdownRules(quickCopyButtons), [quickCopyButtons]);
 
   return (
     <View style={[styles.wrapper, isUser ? styles.userWrapper : styles.assistantWrapper]}>
@@ -42,7 +68,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
             {message.content}
           </Text>
         ) : (
-          <Markdown style={markdownStyles}>{message.content}</Markdown>
+          <Markdown rules={markdownRules} style={markdownStyles}>{message.content}</Markdown>
         )}
       </View>
       <Text style={[styles.time, isUser ? styles.userTime : styles.assistantTime]}>
