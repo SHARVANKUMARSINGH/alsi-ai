@@ -3,17 +3,18 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
-import { requestAppwriteOtp, verifyAppwriteOtp } from "@/lib/appwrite-account";
+import { requestAppwriteOtp, type AppwriteAuthIntent, verifyAppwriteOtp } from "@/lib/appwrite-account";
 
 type LoginScreenProps = {
   onContinueAsGuest: () => void;
-  onLogin: (email: string) => Promise<void>;
+  onLogin: (email: string, intent: AppwriteAuthIntent) => Promise<void>;
 };
 
 type AuthChoice = "verify" | "guest";
 
 export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
   const [choice, setChoice] = useState<AuthChoice>("verify");
+  const [authIntent, setAuthIntent] = useState<AppwriteAuthIntent>("signUp");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
     setIsSending(true);
     setError(null);
     try {
-      const token = await requestAppwriteOtp(normalizedEmail);
+      const token = await requestAppwriteOtp(normalizedEmail, authIntent);
       setOtpEmail(normalizedEmail);
       setOtpUserId(token.userId);
       setCode("");
@@ -64,7 +65,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
     setError(null);
     try {
       await verifyAppwriteOtp(otpUserId, code);
-      await onLogin(otpEmail);
+      await onLogin(otpEmail, authIntent);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We could not finish signing you in. Please try again.");
     } finally {
@@ -73,6 +74,14 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
   };
 
   const isOtpStep = Boolean(otpEmail);
+  const isSignIn = authIntent === "signIn";
+  const toggleAuthIntent = () => {
+    setAuthIntent((previous) => previous === "signIn" ? "signUp" : "signIn");
+    setOtpEmail(null);
+    setOtpUserId(null);
+    setCode("");
+    setError(null);
+  };
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-background">
@@ -121,8 +130,8 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
             <View style={styles.formCard}>
               {!isOtpStep ? (
                 <>
-                  <Text style={styles.formTitle}>Verify your email</Text>
-                  <Text style={styles.formBody}>Appwrite will send a secure six-digit verification code to your inbox.</Text>
+                  <Text style={styles.formTitle}>{isSignIn ? "Sign in to your account" : "Create your account"}</Text>
+                  <Text style={styles.formBody}>{isSignIn ? "Use your email OTP to restore your saved token balance." : "Verify your email to create an account with 100 renewable tokens."}</Text>
                   <Text style={styles.label}>EMAIL ADDRESS</Text>
                   <View style={styles.inputShell}>
                     <MaterialCommunityIcons color="#797773" name="email-outline" size={19} />
@@ -142,14 +151,17 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
                   </View>
                   {error ? <Text style={styles.validation}>{error}</Text> : null}
                   <Pressable disabled={isSending} onPress={sendOtp} style={({ pressed }) => [styles.loginButton, isSending && styles.disabled, pressed && styles.pressed]}>
-                    <Text style={styles.loginButtonText}>{isSending ? "Sending code..." : "Send Appwrite OTP"}</Text>
+                    <Text style={styles.loginButtonText}>{isSending ? "Sending code..." : isSignIn ? "Send sign-in OTP" : "Send sign-up OTP"}</Text>
                     <MaterialCommunityIcons color="#FFFFFF" name="email-fast-outline" size={18} />
+                  </Pressable>
+                  <Pressable onPress={toggleAuthIntent} style={({ pressed }) => [styles.authSwitchButton, pressed && styles.pressed]}>
+                    <Text style={styles.authSwitchText}>{isSignIn ? "New to ALSI Ai? Sign up" : "Already have an account? Sign in"}</Text>
                   </Pressable>
                 </>
               ) : (
                 <>
                   <Text style={styles.formTitle}>Check your inbox</Text>
-                  <Text style={styles.formBody}>Enter the six-digit Appwrite code sent to {otpEmail}.</Text>
+                  <Text style={styles.formBody}>Enter the six-digit Appwrite code sent to {otpEmail} to {isSignIn ? "restore your account" : "create your account"}.</Text>
                   <Text style={styles.label}>ONE-TIME CODE</Text>
                   <View style={styles.inputShell}>
                     <MaterialCommunityIcons color="#797773" name="shield-key-outline" size={19} />
@@ -213,6 +225,8 @@ const styles = StyleSheet.create({
   validation: { color: "#C1544C", fontSize: 11, lineHeight: 16, marginBottom: 10, marginTop: -7 },
   loginButton: { alignItems: "center", backgroundColor: "#171716", borderRadius: 14, flexDirection: "row", gap: 8, justifyContent: "center", marginTop: 3, paddingVertical: 14 },
   loginButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
+  authSwitchButton: { alignItems: "center", marginTop: 15, paddingVertical: 4 },
+  authSwitchText: { color: "#A93D35", fontSize: 12, fontWeight: "800" },
   guestButton: { alignItems: "center", backgroundColor: "#171716", borderRadius: 14, flexDirection: "row", gap: 8, justifyContent: "center", paddingVertical: 14 },
   guestButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
   disabled: { opacity: 0.48 },

@@ -42,3 +42,7 @@
 - [x] Synchronize verified-user token renewals and model deductions to the Appwrite users collection.
 - [x] Validate Appwrite authentication, token persistence, model restrictions, and Android export.
 - [x] Inspect and checkpoint any remaining unpackaged ALSI Ai project changes.
+- [x] Add explicit Sign In and Sign Up choices that preserve existing Appwrite users and their token balances.
+- [x] Handle existing Appwrite sessions safely during OTP verification without duplicate-session errors.
+- [x] Install and configure a React Native Markdown renderer for chat responses, including styled code blocks.
+- [x] Validate authentication persistence, Markdown bubbles, and Android export.

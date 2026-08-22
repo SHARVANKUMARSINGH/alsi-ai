@@ -41,7 +41,7 @@ import {
   type Conversation,
 } from "@/lib/conversations";
 import { getAlsiModel, type AlsiModelId } from "@/lib/models";
-import { loadOrCreateAppwriteAccount, saveAppwriteAccount } from "@/lib/appwrite-account";
+import { completeAppwriteAuth, saveAppwriteAccount, type AppwriteAuthIntent } from "@/lib/appwrite-account";
 import { trpc } from "@/lib/trpc";
 
 const starterPrompts = [
@@ -246,8 +246,8 @@ export default function HomeScreen() {
     });
   }, [activeConversationId]);
 
-  const login = useCallback(async (email: string) => {
-    const appwriteAccount = await loadOrCreateAppwriteAccount(email);
+  const login = useCallback(async (email: string, intent: AppwriteAuthIntent) => {
+    const appwriteAccount = await completeAppwriteAuth(email, intent);
     setAccount(refreshAccountTokens(appwriteAccount));
     setLoginOpen(false);
   }, []);

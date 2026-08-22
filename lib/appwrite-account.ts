@@ -16,6 +16,8 @@ type AppwriteUserDocument = Models.Document & {
   last_login: string;
 };
 
+export type AppwriteAuthIntent = "signIn" | "signUp";
+
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
@@ -40,20 +42,42 @@ async function findUserDocument(email: string) {
   return result.documents[0] ?? null;
 }
 
-export async function requestAppwriteOtp(email: string) {
+export async function requestAppwriteOtp(email: string, intent: AppwriteAuthIntent) {
+  const existing = await findUserDocument(email);
+  if (intent === "signIn" && !existing) {
+    throw new Error("We could not find an account for that email. Choose Sign Up to create one.");
+  }
+  if (intent === "signUp" && existing) {
+    throw new Error("An account already exists for that email. Choose Sign In to keep your saved tokens.");
+  }
+
   return appwriteAccount.createEmailToken(ID.unique(), normalizeEmail(email));
 }
 
 export async function verifyAppwriteOtp(userId: string, secret: string) {
+  try {
+    const activeUser = await appwriteAccount.get();
+    await appwriteAccount.deleteSession(activeUser.$id);
+  } catch {
+    // No active session exists, which is expected for a fresh verification.
+  }
+
   return appwriteAccount.createSession(userId, secret);
 }
 
-export async function loadOrCreateAppwriteAccount(email: string, now = Date.now()): Promise<StoredAccount> {
+export async function completeAppwriteAuth(email: string, intent: AppwriteAuthIntent, now = Date.now()): Promise<StoredAccount> {
   const normalizedEmail = normalizeEmail(email);
   const existing = await findUserDocument(normalizedEmail);
 
   if (existing) {
+    if (intent === "signUp") {
+      throw new Error("An account already exists for that email. Choose Sign In to keep your saved tokens.");
+    }
     return fromDocument(existing, now);
+  }
+
+  if (intent === "signIn") {
+    throw new Error("We could not find an account for that email. Choose Sign Up to create one.");
   }
 
   const account = createLoggedInAccount(normalizedEmail, now);

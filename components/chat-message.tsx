@@ -1,3 +1,4 @@
+import Markdown from "react-native-markdown-display";
 import { StyleSheet, Text, View } from "react-native";
 
 import type { ChatMessage as ChatMessageType } from "@/lib/chat";
@@ -33,9 +34,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
           message.isError && styles.errorBubble,
         ]}
       >
-        <Text style={[styles.messageText, isUser ? styles.userText : styles.assistantText]}>
-          {message.content}
-        </Text>
+        {isUser || message.isError ? (
+          <Text style={[styles.messageText, isUser ? styles.userText : styles.assistantText]}>
+            {message.content}
+          </Text>
+        ) : (
+          <Markdown style={markdownStyles}>{message.content}</Markdown>
+        )}
       </View>
       <Text style={[styles.time, isUser ? styles.userTime : styles.assistantTime]}>
         {timestamp(message.createdAt)}
@@ -121,5 +126,115 @@ const styles = StyleSheet.create({
   },
   assistantTime: {
     paddingLeft: 3,
+  },
+});
+
+const markdownStyles = StyleSheet.create({
+  body: {
+    color: "#20201F",
+    fontSize: 16,
+    lineHeight: 23,
+  },
+  heading1: {
+    color: "#171716",
+    fontSize: 23,
+    fontWeight: "800",
+    lineHeight: 29,
+    marginBottom: 10,
+    marginTop: 3,
+  },
+  heading2: {
+    color: "#171716",
+    fontSize: 19,
+    fontWeight: "800",
+    lineHeight: 25,
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  heading3: {
+    color: "#292825",
+    fontSize: 17,
+    fontWeight: "800",
+    lineHeight: 23,
+    marginBottom: 6,
+    marginTop: 10,
+  },
+  strong: {
+    color: "#171716",
+    fontWeight: "800",
+  },
+  em: {
+    color: "#5C5A56",
+    fontStyle: "italic",
+  },
+  bullet_list: {
+    marginBottom: 7,
+    marginTop: 4,
+  },
+  ordered_list: {
+    marginBottom: 7,
+    marginTop: 4,
+  },
+  list_item: {
+    flexDirection: "row",
+    marginBottom: 4,
+  },
+  bullet_list_icon: {
+    color: "#FF5A4F",
+    marginRight: 7,
+  },
+  ordered_list_icon: {
+    color: "#B4443C",
+    fontWeight: "800",
+    marginRight: 7,
+  },
+  code_inline: {
+    backgroundColor: "#F0EEEA",
+    borderColor: "#DDD9D2",
+    borderRadius: 5,
+    borderWidth: 1,
+    color: "#9C3932",
+    fontFamily: "monospace",
+    fontSize: 13,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  fence: {
+    backgroundColor: "#171716",
+    borderRadius: 13,
+    color: "#F8F7F5",
+    fontFamily: "monospace",
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 10,
+    marginTop: 10,
+    overflow: "hidden",
+    padding: 13,
+  },
+  code_block: {
+    backgroundColor: "#171716",
+    borderRadius: 13,
+    color: "#F8F7F5",
+    fontFamily: "monospace",
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 10,
+    marginTop: 10,
+    overflow: "hidden",
+    padding: 13,
+  },
+  link: {
+    color: "#B4443C",
+    fontWeight: "700",
+    textDecorationLine: "underline",
+  },
+  blockquote: {
+    backgroundColor: "#FFF4F2",
+    borderLeftColor: "#FF5A4F",
+    borderLeftWidth: 3,
+    color: "#5C4541",
+    marginBottom: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
   },
 });
