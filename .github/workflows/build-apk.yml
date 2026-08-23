@@ -23,12 +23,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: pnpm
 
       - name: Set up Expo and EAS
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
+          eas-cache: false
           packager: pnpm
           token: ${{ secrets.EXPO_TOKEN }}
 

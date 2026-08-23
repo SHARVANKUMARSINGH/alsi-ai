@@ -97,3 +97,6 @@
 - [x] Validate the branding assets, Android export, and GitHub publication.
 - [x] Pin GitHub Actions pnpm setup to the exact project package-manager version.
 - [x] Validate and publish the repaired Cloud Android APK workflow.
+- [x] Inspect the failing Cloud Android APK GitHub Actions run and identify the blocking step.
+- [x] Remove optional cache dependencies and harden the cloud APK workflow against temporary CI service failures.
+- [x] Validate and publish the repaired Cloud Android APK workflow.
