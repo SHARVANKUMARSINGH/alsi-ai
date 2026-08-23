@@ -20,7 +20,7 @@ export const alsiModels: readonly AlsiModel[] = [
     description: "Fast text and vision help",
     openRouterModel: {
       text: "openrouter/free",
-      vision: "google/gemma-4-31b-it:free",
+      vision: "qwen/qwen-2-vl-72b-instruct:free",
     },
     tokenCost: 1,
   },

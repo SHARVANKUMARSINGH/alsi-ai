@@ -75,3 +75,6 @@
 - [x] Validate the clean Expo configuration and prepare a safe account-initialization handoff for a new Android build.
 - [x] Replace the Expo export credential with the newly supplied key.
 - [x] Validate the replacement Expo credential through Expo’s GraphQL account endpoint.
+- [x] Remove any legacy Expo owner or EAS project ID if present in application configuration; none exists in the effective Expo configuration.
+- [x] Change only ALSI Lite’s vision model to qwen/qwen-2-vl-72b-instruct:free.
+- [x] Validate the Lite vision route, clean Expo configuration, and Android export before user-initiated publishing.
