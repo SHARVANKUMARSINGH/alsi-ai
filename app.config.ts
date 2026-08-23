@@ -30,9 +30,8 @@ const env = {
   // App branding - update these values directly (do not use env vars)
   appName: "ALSI Ai",
   appSlug: "alsi-ai",
-  // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
-  // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "/manus-storage/alsi-legacy-icon-safezone_c01c850a.png",
+  // Local source-controlled ALSI logo shared by native, web, and in-app brand surfaces.
+  logoUrl: "",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -108,9 +107,9 @@ const config: ExpoConfig = {
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#ffffff",
+        backgroundColor: "#0D0D0D",
         dark: {
-          backgroundColor: "#000000",
+          backgroundColor: "#0D0D0D",
         },
       },
     ],

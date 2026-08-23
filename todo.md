@@ -91,3 +91,7 @@
 - [x] Add an EAS preview APK profile and a manual GitHub Actions cloud build workflow.
 - [x] Configure the public repository’s `EXPO_TOKEN` Actions secret without committing it.
 - [x] Verify the cloud APK workflow configuration without triggering a build.
+- [x] Replace all ALSI Ai launcher, splash, favicon, and in-app logo assets with the user-supplied icon.
+- [x] Create native safe-zone icon variants that resize cleanly for Android adaptive, legacy, and splash contexts.
+- [x] Update branding configuration and in-app logo usage to the supplied icon assets.
+- [x] Validate the branding assets, Android export, and GitHub publication.

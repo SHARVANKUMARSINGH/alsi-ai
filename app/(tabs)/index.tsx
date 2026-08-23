@@ -360,16 +360,14 @@ export default function HomeScreen() {
               <MaterialCommunityIcons color="#2E2E2C" name="menu" size={22} />
             </Pressable>
             <View style={styles.brandRow}>
-            <View style={styles.logoMark}>
-              <Text style={styles.logoText}>A</Text>
-            </View>
-            <View>
-              <Text style={styles.title}>ALSI Ai</Text>
-              <View style={styles.statusRow}>
-                <View style={styles.statusDot} />
-                <Text style={styles.statusText}>{account.mode === "guest" ? "Guest mode" : "Logged in"}</Text>
+              <Image accessibilityLabel="ALSI Ai logo" source={require("../../assets/images/icon.png")} style={styles.logoMark} />
+              <View>
+                <Text style={styles.title}>ALSI Ai</Text>
+                <View style={styles.statusRow}>
+                  <View style={styles.statusDot} />
+                  <Text style={styles.statusText}>{account.mode === "guest" ? "Guest mode" : "Logged in"}</Text>
+                </View>
               </View>
-            </View>
             </View>
           </View>
           <View style={styles.headerActions}>
@@ -519,15 +517,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 36,
   },
-  logoMark: {
-    alignItems: "center",
-    backgroundColor: "#151515",
-    borderRadius: 12,
-    height: 37,
-    justifyContent: "center",
-    width: 37,
-  },
-  logoText: { color: "#FFFFFF", fontSize: 19, fontWeight: "800", letterSpacing: -0.7 },
+  logoMark: { borderRadius: 12, height: 37, width: 37 },
   title: { color: "#1B1B1A", fontSize: 17, fontWeight: "800", letterSpacing: -0.2 },
   statusRow: { alignItems: "center", flexDirection: "row", gap: 5, marginTop: 2 },
   statusDot: { backgroundColor: "#42A77B", borderRadius: 3, height: 6, width: 6 },

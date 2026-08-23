@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { requestAppwriteOtp, type AppwriteAuthIntent, verifyAppwriteOtp } from "@/lib/appwrite-account";
@@ -88,7 +88,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
         <View style={styles.content}>
           <View style={styles.hero}>
-            <View style={styles.mark}><Text style={styles.markText}>A</Text></View>
+            <Image accessibilityLabel="ALSI Ai logo" source={require("../assets/images/icon.png")} style={styles.mark} />
             <Text style={styles.eyebrow}>ALSI AI ACCESS</Text>
             <View style={styles.choiceRow}>
               <Pressable
@@ -206,8 +206,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { flex: 1, justifyContent: "center", paddingHorizontal: 22, paddingVertical: 24 },
   hero: { alignItems: "center", marginBottom: 26 },
-  mark: { alignItems: "center", backgroundColor: "#171716", borderRadius: 19, height: 58, justifyContent: "center", marginBottom: 14, width: 58 },
-  markText: { color: "#FFFFFF", fontSize: 28, fontWeight: "800", letterSpacing: -1 },
+  mark: { borderRadius: 19, height: 58, marginBottom: 14, width: 58 },
   eyebrow: { color: "#B4443C", fontSize: 10, fontWeight: "800", letterSpacing: 1.2, marginBottom: 13 },
   choiceRow: { alignSelf: "stretch", flexDirection: "row", gap: 9 },
   choiceButton: { alignItems: "center", backgroundColor: "#F0EEEA", borderColor: "#DEDCD7", borderRadius: 15, borderWidth: 1, flex: 1, gap: 7, justifyContent: "center", minHeight: 75, paddingHorizontal: 8, paddingVertical: 11 },
