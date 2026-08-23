@@ -14,15 +14,15 @@
 
 ## Stack
 
-| Area | Technology |
-| --- | --- |
-| Mobile client | React Native, Expo SDK 54, Expo Router, TypeScript |
-| Styling | NativeWind and React Native StyleSheet |
-| AI proxy | tRPC server and OpenRouter Chat Completions API |
-| Authentication and token records | Appwrite and `react-native-appwrite` |
-| Persistence | AsyncStorage |
-| Native integrations | Expo Image Picker and Expo Clipboard |
-| Tests | Vitest |
+| Area                             | Technology                                         |
+| -------------------------------- | -------------------------------------------------- |
+| Mobile client                    | React Native, Expo SDK 54, Expo Router, TypeScript |
+| Styling                          | NativeWind and React Native StyleSheet             |
+| AI proxy                         | tRPC server and OpenRouter Chat Completions API    |
+| Authentication and token records | Appwrite and `react-native-appwrite`               |
+| Persistence                      | AsyncStorage                                       |
+| Native integrations              | Expo Image Picker and Expo Clipboard               |
+| Tests                            | Vitest                                             |
 
 ## Local development
 
@@ -47,6 +47,11 @@ Create the required backend and AI environment values through your deployment or
 ## Publishing an Android build
 
 Create a project checkpoint, then use the managed **Publish** control in the project UI to initialize the build workflow and generate the Android package.
+
+## GitHub Actions cloud APK build
+
+The repository includes a manual workflow at `.github/workflows/build-apk.yml`. It installs the project, authenticates to Expo through the encrypted `EXPO_TOKEN` repository secret, and triggers an EAS **preview** Android APK build.
+Before the first GitHub Actions build, link ALSI Ai to a **new** EAS project owned by the intended Expo account. EAS requires a newly generated `extra.eas.projectId` for that account; do not restore an identifier from a previous Expo account. Once linked, open the repository’s **Actions** tab and run **Cloud Android APK**. The EAS build URL is shown in the workflow log.
 
 ## License
 

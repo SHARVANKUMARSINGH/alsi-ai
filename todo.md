@@ -87,3 +87,7 @@
 - [ ] Push the prepared ALSI Ai main branch to the public GitHub repository.
 - [ ] Add a secret-safe GitHub Actions Android build workflow without embedding credentials.
 - [ ] Commit, push, and verify the published source and workflow files.
+- [ ] Store and validate the supplied Expo token for GitHub Actions cloud APK builds.
+- [ ] Add an EAS preview APK profile and a manual GitHub Actions cloud build workflow.
+- [ ] Configure the public repository’s `EXPO_TOKEN` Actions secret without committing it.
+- [ ] Verify the cloud APK workflow configuration without triggering a build.
