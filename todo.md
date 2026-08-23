@@ -83,3 +83,7 @@
 - [ ] Commit and push the complete ALSI Ai project source and implemented features.
 - [ ] Verify the public GitHub repository contents and remote link.
 - [x] Receive the user-created public repository URL for ALSI Ai: https://github.com/SHARVANKUMARSINGH/alsi-ai
+- [ ] Securely validate the provided GitHub repository write credential.
+- [ ] Push the prepared ALSI Ai main branch to the public GitHub repository.
+- [ ] Add a secret-safe GitHub Actions Android build workflow without embedding credentials.
+- [ ] Commit, push, and verify the published source and workflow files.
