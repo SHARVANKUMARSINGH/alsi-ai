@@ -95,3 +95,5 @@
 - [x] Create native safe-zone icon variants that resize cleanly for Android adaptive, legacy, and splash contexts.
 - [x] Update branding configuration and in-app logo usage to the supplied icon assets.
 - [x] Validate the branding assets, Android export, and GitHub publication.
+- [ ] Pin GitHub Actions pnpm setup to the exact project package-manager version.
+- [ ] Validate and publish the repaired Cloud Android APK workflow.
