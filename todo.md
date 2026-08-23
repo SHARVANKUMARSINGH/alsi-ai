@@ -78,16 +78,16 @@
 - [x] Remove any legacy Expo owner or EAS project ID if present in application configuration; none exists in the effective Expo configuration.
 - [x] Change only ALSI Lite’s vision model to qwen/qwen-2-vl-72b-instruct:free.
 - [x] Validate the Lite vision route, clean Expo configuration, and Android export before user-initiated publishing.
-- [ ] Review the project repository state and ensure sensitive local credentials are not published.
-- [ ] Create a public GitHub repository under the connected account for ALSI Ai.
-- [ ] Commit and push the complete ALSI Ai project source and implemented features.
-- [ ] Verify the public GitHub repository contents and remote link.
+- [x] Review the project repository state and ensure sensitive local credentials are not published.
+- [x] Use the user-created public GitHub repository under the connected account for ALSI Ai.
+- [x] Commit and push the complete ALSI Ai project source and implemented features.
+- [x] Verify the public GitHub repository contents and remote link.
 - [x] Receive the user-created public repository URL for ALSI Ai: https://github.com/SHARVANKUMARSINGH/alsi-ai
-- [ ] Securely validate the provided GitHub repository write credential.
-- [ ] Push the prepared ALSI Ai main branch to the public GitHub repository.
-- [ ] Add a secret-safe GitHub Actions Android build workflow without embedding credentials.
-- [ ] Commit, push, and verify the published source and workflow files.
-- [ ] Store and validate the supplied Expo token for GitHub Actions cloud APK builds.
-- [ ] Add an EAS preview APK profile and a manual GitHub Actions cloud build workflow.
-- [ ] Configure the public repository’s `EXPO_TOKEN` Actions secret without committing it.
-- [ ] Verify the cloud APK workflow configuration without triggering a build.
+- [x] Securely validate the provided GitHub repository write credential.
+- [x] Push the prepared ALSI Ai main branch to the public GitHub repository.
+- [x] Add a secret-safe GitHub Actions Android build workflow without embedding credentials.
+- [x] Commit, push, and verify the published source and workflow files.
+- [x] Store and validate the supplied Expo token for GitHub Actions cloud APK builds.
+- [x] Add an EAS preview APK profile and a manual GitHub Actions cloud build workflow.
+- [x] Configure the public repository’s `EXPO_TOKEN` Actions secret without committing it.
+- [x] Verify the cloud APK workflow configuration without triggering a build.
