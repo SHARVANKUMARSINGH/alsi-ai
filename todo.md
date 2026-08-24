@@ -145,3 +145,7 @@
 - [x] Add a secure in-memory personal-token publish option with explicit approval and immediate clearing after every attempt.
 - [x] Add tests and validate token clearing behavior for the one-time publishing update.
 - [x] Checkpoint and publish the one-time publishing update.
+- [x] Verify the newly enabled Appwrite GitHub OAuth provider is ready for native publishing.
+- [x] Restore the explicit-approval GitHub OAuth publish flow and remove the user-entered key field.
+- [x] Add OAuth-path regression coverage and validate the restored Appwrite GitHub OAuth flow.
+- [ ] Checkpoint and publish the GitHub OAuth restoration.

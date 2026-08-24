@@ -1,9 +1,13 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { OAuthProvider } from "react-native-appwrite";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Modal, Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 
 import type { GeneratedProjectFile } from "@/lib/chat";
-import { clearOneTimeToken, publishGeneratedProject, toRepositorySlug } from "@/lib/github-publish";
+import { publishGeneratedProject, toRepositorySlug } from "@/lib/github-publish";
+import { appwriteAccount, APPWRITE_OAUTH_CALLBACK_SCHEME } from "@/lib/appwrite";
 
 type GitHubPublishSheetProps = {
   files: GeneratedProjectFile[];
@@ -18,14 +22,12 @@ export function GitHubPublishSheet({ files, projectName, visible, onClose }: Git
   const [isPrivate, setIsPrivate] = useState(true);
   const [approved, setApproved] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [personalAccessToken, setPersonalAccessToken] = useState("");
   const [status, setStatus] = useState("");
 
   useEffect(() => {
     if (visible) {
       setRepositoryName(initialName);
       setApproved(false);
-      setPersonalAccessToken(clearOneTimeToken());
       setStatus("");
     }
   }, [initialName, visible]);
@@ -33,12 +35,11 @@ export function GitHubPublishSheet({ files, projectName, visible, onClose }: Git
   const clearAuthorizationState = () => {
     setApproved(false);
     setIsPublishing(false);
-    setPersonalAccessToken(clearOneTimeToken());
   };
 
   const publish = async () => {
-    if (!approved || isPublishing || !personalAccessToken.trim()) {
-      Alert.alert("Approval and key required", "Enter your own GitHub read/write key and confirm repository creation before continuing.");
+    if (!approved || isPublishing) {
+      Alert.alert("Approval required", "Confirm that you want to authorize GitHub and create this repository before continuing.");
       return;
     }
 
@@ -48,16 +49,35 @@ export function GitHubPublishSheet({ files, projectName, visible, onClose }: Git
       return;
     }
 
-    let oneTimeToken = personalAccessToken.trim();
+    let providerAccessToken = "";
     setIsPublishing(true);
     try {
-      const repository = await publishGeneratedProject(oneTimeToken, { name, isPrivate, files }, setStatus);
+      const redirectUrl = Linking.createURL("localhost", { scheme: APPWRITE_OAUTH_CALLBACK_SCHEME });
+      const authorizationUrl = appwriteAccount.createOAuth2Session({
+        provider: OAuthProvider.Github,
+        success: redirectUrl,
+        failure: redirectUrl,
+        scopes: ["repo"],
+      });
+      if (!authorizationUrl) throw new Error("GitHub authorization could not be started.");
+
+      setStatus("Waiting for GitHub approval…");
+      const result = await WebBrowser.openAuthSessionAsync(authorizationUrl.toString(), redirectUrl);
+      if (result.type !== "success") throw new Error("GitHub authorization was cancelled or did not finish.");
+
+      const session = await appwriteAccount.getSession("current");
+      providerAccessToken = session.providerAccessToken;
+      if (session.provider !== "github" || !providerAccessToken) {
+        throw new Error("GitHub authorization completed, but repository permission was unavailable. Approve repository access and try again.");
+      }
+
+      const repository = await publishGeneratedProject(providerAccessToken, { name, isPrivate, files }, setStatus);
       setStatus(`Published to ${repository.owner}/${repository.name}.`);
       Alert.alert("Repository created", `Your generated React Native project is now in ${repository.owner}/${repository.name}.`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "GitHub publishing could not be completed.");
     } finally {
-      oneTimeToken = clearOneTimeToken();
+      providerAccessToken = "";
       clearAuthorizationState();
     }
   };
@@ -76,23 +96,9 @@ export function GitHubPublishSheet({ files, projectName, visible, onClose }: Git
               <MaterialCommunityIcons color="#474642" name="close" size={20} />
             </Pressable>
           </View>
-          <Text style={styles.description}>Enter your own GitHub key with repository creation and Contents read/write access. ALSI Ai uses it only while uploading these {files.length} generated files, then clears it from memory.</Text>
+          <Text style={styles.description}>GitHub opens in a secure browser. ALSI Ai uses the approved authorization only while uploading these {files.length} reviewed files and clears the temporary access value after the attempt.</Text>
           <Text style={styles.label}>REPOSITORY NAME</Text>
           <TextInput autoCapitalize="none" autoCorrect={false} onChangeText={setRepositoryName} placeholder="my-react-native-project" style={styles.input} value={repositoryName} />
-          <Text style={styles.label}>ONE-TIME GITHUB KEY</Text>
-          <TextInput
-            accessibilityLabel="One-time GitHub personal access token"
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={setPersonalAccessToken}
-            placeholder="Paste your own read/write key"
-            placeholderTextColor="#98938C"
-            secureTextEntry
-            style={styles.input}
-            textContentType="password"
-            value={personalAccessToken}
-          />
-          <Text style={styles.keyNote}>This key is never saved to device storage, conversation history, project files, or logs. It is cleared on close, success, and failure.</Text>
           <View style={styles.privateRow}>
             <View style={styles.privateCopy}>
               <Text style={styles.privateTitle}>Private repository</Text>
@@ -102,11 +108,11 @@ export function GitHubPublishSheet({ files, projectName, visible, onClose }: Git
           </View>
           <Pressable onPress={() => setApproved((value) => !value)} style={({ pressed }) => [styles.approval, pressed && styles.pressed]}>
             <MaterialCommunityIcons color={approved ? "#235EBA" : "#77746E"} name={approved ? "checkbox-marked" : "checkbox-blank-outline"} size={22} />
-            <Text style={styles.approvalText}>I approve using my one-time key to create this {isPrivate ? "private" : "public"} repository with the reviewed files.</Text>
+            <Text style={styles.approvalText}>I approve opening GitHub and creating this {isPrivate ? "private" : "public"} repository with the reviewed files.</Text>
           </Pressable>
-          <Pressable disabled={!approved || !personalAccessToken.trim() || isPublishing} onPress={() => { void publish(); }} style={({ pressed }) => [styles.publishButton, (!approved || !personalAccessToken.trim() || isPublishing) && styles.publishDisabled, pressed && styles.pressed]}>
+          <Pressable disabled={!approved || isPublishing} onPress={() => { void publish(); }} style={({ pressed }) => [styles.publishButton, (!approved || isPublishing) && styles.publishDisabled, pressed && styles.pressed]}>
             <MaterialCommunityIcons color="#FFFFFF" name={isPublishing ? "progress-clock" : "github"} size={18} />
-            <Text style={styles.publishText}>{isPublishing ? "Publishing…" : "Publish with one-time key"}</Text>
+            <Text style={styles.publishText}>{isPublishing ? "Publishing…" : "Connect GitHub & publish"}</Text>
           </Pressable>
           {status ? <Text style={styles.status}>{status}</Text> : null}
         </View>
@@ -126,7 +132,6 @@ const styles = StyleSheet.create({
   description: { color: "#6D6A65", fontSize: 13, lineHeight: 19, marginTop: 10 },
   label: { color: "#77736D", fontSize: 10, fontWeight: "900", letterSpacing: 0.9, marginLeft: 2, marginTop: 18 },
   input: { backgroundColor: "#FFFFFF", borderColor: "#DEDAD4", borderRadius: 12, borderWidth: 1, color: "#22211F", fontFamily: "monospace", fontSize: 15, marginTop: 7, paddingHorizontal: 12, paddingVertical: 12 },
-  keyNote: { color: "#77736D", fontSize: 11, lineHeight: 16, marginTop: 7 },
   privateRow: { alignItems: "center", borderBottomColor: "#E5E1DA", borderBottomWidth: 1, flexDirection: "row", justifyContent: "space-between", marginTop: 15, paddingBottom: 15 },
   privateCopy: { flex: 1, paddingRight: 16 },
   privateTitle: { color: "#292825", fontSize: 14, fontWeight: "800" },

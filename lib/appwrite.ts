@@ -18,4 +18,5 @@ export const appwriteAccount = new Account(client);
 export const appwriteDatabases = new Databases(client);
 export const APPWRITE_DATABASE_ID = databaseId;
 export const APPWRITE_USERS_COLLECTION_ID = usersCollectionId;
+export const APPWRITE_OAUTH_CALLBACK_SCHEME = `appwrite-callback-${projectId}`;
 export { ID, Query };

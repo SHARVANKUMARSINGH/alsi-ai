@@ -25,6 +25,7 @@ const bundleId =
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
 const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
 const schemeFromBundleId = `manus${timestamp}`;
+const appwriteCallbackScheme = "appwrite-callback-6a886110002675709e89";
 
 const env = {
   // App branding - update these values directly (do not use env vars)
@@ -44,7 +45,7 @@ const config: ExpoConfig = {
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
-  scheme: env.scheme,
+  scheme: [env.scheme, appwriteCallbackScheme],
   extra: {
     eas: {
       projectId: env.easProjectId,
@@ -76,6 +77,16 @@ const config: ExpoConfig = {
         data: [
           {
             scheme: env.scheme,
+          },
+        ],
+        category: ["BROWSABLE", "DEFAULT"],
+      },
+      {
+        action: "VIEW",
+        data: [
+          {
+            scheme: appwriteCallbackScheme,
+            host: "localhost",
           },
         ],
         category: ["BROWSABLE", "DEFAULT"],
