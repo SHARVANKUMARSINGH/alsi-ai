@@ -162,4 +162,4 @@
 - [x] Confirm the enabled Appwrite Google provider is ready for the native callback flow and account-token handling.
 - [x] Add a Continue with Google control while preserving email OTP sign-in and sign-up.
 - [x] Validate Google OAuth readiness, authentication regressions, and Android export.
-- [ ] Checkpoint and publish the Google sign-in update.
+- [x] Checkpoint and publish the Google sign-in update.
