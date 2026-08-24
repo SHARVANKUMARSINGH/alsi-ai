@@ -138,3 +138,10 @@
 - [x] Add explicit user approval controls for a generated-project GitHub repository handoff.
 - [x] Add safe repository publishing guidance that keeps GitHub credentials out of the mobile app.
 - [x] Add tests, validate the mobile app, checkpoint, and publish the GitHub publishing flow.
+- [x] Request an Appwrite OTP for the user-provided test mailbox and complete verification only after the user supplies the code.
+- [ ] Exercise authenticated App Builder, code workspace, Expo handoff, and GitHub publishing approval controls.
+- [ ] Repair verified defects, run complete validation, and publish any required fixes.
+- [x] Define the one-time user-supplied GitHub personal-token boundary without reusing the project credential.
+- [x] Add a secure in-memory personal-token publish option with explicit approval and immediate clearing after every attempt.
+- [x] Add tests and validate token clearing behavior for the one-time publishing update.
+- [ ] Checkpoint and publish the one-time publishing update.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { encodeUtf8Base64, toRepositorySlug } from "../lib/github-publish";
+import { clearOneTimeToken, encodeUtf8Base64, toRepositorySlug } from "../lib/github-publish";
 
 describe("GitHub publishing helpers", () => {
   it("normalizes user-facing project names into safe repository names", () => {
@@ -11,5 +11,9 @@ describe("GitHub publishing helpers", () => {
 
   it("encodes Unicode generated source without requiring a browser or persisted credential", () => {
     expect(encodeUtf8Base64("const title = 'ALSI ✓';")).toBe("Y29uc3QgdGl0bGUgPSAnQUxTSSDinJMnOw==");
+  });
+
+  it("clears a one-time publishing token instead of returning a persistable value", () => {
+    expect(clearOneTimeToken()).toBe("");
   });
 });

@@ -36,6 +36,10 @@ export function encodeUtf8Base64(value: string) {
   return encoded;
 }
 
+export function clearOneTimeToken() {
+  return "";
+}
+
 async function githubJson<T>(token: string, path: string, init?: RequestInit) {
   const response = await fetch(`${GITHUB_API}${path}`, {
     ...init,
