@@ -9,12 +9,15 @@ import {
   type ChatMode,
   type ChatSettings,
 } from "@/lib/chat";
+import type { AlsiModelId } from "@/lib/models";
 
 type AiControlsSheetProps = {
   visible: boolean;
   settings: ChatSettings;
   onChange: (settings: ChatSettings) => void;
   onClose: () => void;
+  onOpenAppBuilder: () => void;
+  selectedModelId: AlsiModelId;
 };
 
 const modes: { id: ChatMode; label: string; icon: "message-processing-outline" | "head-snowflake-outline" }[] = [
@@ -22,10 +25,12 @@ const modes: { id: ChatMode; label: string; icon: "message-processing-outline" |
   { id: "thinking", label: "Thinking", icon: "head-snowflake-outline" },
 ];
 
-export function AiControlsSheet({ visible, settings, onChange, onClose }: AiControlsSheetProps) {
+export function AiControlsSheet({ visible, settings, onChange, onClose, onOpenAppBuilder, selectedModelId }: AiControlsSheetProps) {
   const setMode = (mode: ChatMode) => onChange({ ...settings, mode });
   const setAggression = (aggression: AggressionLevel) => onChange({ ...settings, aggression });
   const setQuickCopyButtons = (quickCopyButtons: boolean) => onChange({ ...settings, quickCopyButtons });
+  const isPro = selectedModelId === "pro";
+  const appBuilderReady = isPro && settings.mode === "thinking" && settings.aggression === 3;
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
@@ -122,6 +127,30 @@ export function AiControlsSheet({ visible, settings, onChange, onClose }: AiCont
             value={settings.quickCopyButtons !== false}
           />
         </View>
+
+        {isPro ? (
+          <View style={styles.appBuilderCard}>
+            <View style={styles.appBuilderHeader}>
+              <View style={styles.appBuilderIcon}><MaterialCommunityIcons color="#FFFFFF" name="hammer-wrench" size={18} /></View>
+              <View style={styles.appBuilderCopy}>
+                <View style={styles.appBuilderTitleRow}>
+                  <Text style={styles.appBuilderTitle}>Develop apps</Text>
+                  <View style={styles.alphaBadge}><Text style={styles.alphaBadgeText}>ALPHA</Text></View>
+                </View>
+                <Text style={styles.appBuilderDescription}>{appBuilderReady ? "Generate a safe Expo build guide for 40 tokens." : "Requires Thinking mode and Maximum Aggressive Mode."}</Text>
+              </View>
+            </View>
+            <Pressable
+              accessibilityLabel="Open App Builder Alpha"
+              disabled={!appBuilderReady}
+              onPress={onOpenAppBuilder}
+              style={({ pressed }) => [styles.appBuilderButton, !appBuilderReady && styles.appBuilderButtonDisabled, pressed && styles.pressed]}
+            >
+              <Text style={[styles.appBuilderButtonText, !appBuilderReady && styles.appBuilderButtonTextDisabled]}>{appBuilderReady ? "Open App Builder" : "Configure to unlock"}</Text>
+              <MaterialCommunityIcons color={appBuilderReady ? "#FFFFFF" : "#9E9C98"} name="arrow-right" size={17} />
+            </Pressable>
+          </View>
+        ) : null}
 
         <Pressable onPress={onClose} style={({ pressed }) => [styles.doneButton, pressed && styles.pressed]}>
           <Text style={styles.doneText}>Done</Text>
@@ -329,6 +358,19 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     marginTop: 4,
   },
+  appBuilderCard: { backgroundColor: "#F0F6FF", borderColor: "#C5DCF9", borderRadius: 16, borderWidth: 1, marginTop: 14, padding: 12 },
+  appBuilderHeader: { alignItems: "center", flexDirection: "row" },
+  appBuilderIcon: { alignItems: "center", backgroundColor: "#3976C8", borderRadius: 13, height: 31, justifyContent: "center", width: 31 },
+  appBuilderCopy: { flex: 1, marginLeft: 9 },
+  appBuilderTitleRow: { alignItems: "center", flexDirection: "row", gap: 6 },
+  appBuilderTitle: { color: "#244D7E", fontSize: 13, fontWeight: "800" },
+  alphaBadge: { backgroundColor: "#DCEBFF", borderColor: "#B5D0F4", borderRadius: 7, borderWidth: 1, paddingHorizontal: 5, paddingVertical: 1 },
+  alphaBadgeText: { color: "#2767B5", fontSize: 8, fontWeight: "900", letterSpacing: 0.6 },
+  appBuilderDescription: { color: "#5C7EA4", fontSize: 10, lineHeight: 14, marginTop: 3 },
+  appBuilderButton: { alignItems: "center", backgroundColor: "#3976C8", borderRadius: 11, flexDirection: "row", justifyContent: "center", marginTop: 11, paddingVertical: 10 },
+  appBuilderButtonDisabled: { backgroundColor: "#E2E6EC" },
+  appBuilderButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800", marginRight: 6 },
+  appBuilderButtonTextDisabled: { color: "#9E9C98" },
   doneButton: {
     alignItems: "center",
     backgroundColor: "#1B1B1A",

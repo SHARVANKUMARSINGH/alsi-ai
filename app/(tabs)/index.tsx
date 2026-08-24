@@ -18,6 +18,7 @@ import {
 } from "react-native";
 
 import { AccountSheet } from "@/components/account-sheet";
+import { AppBuilderSheet } from "@/components/app-builder-sheet";
 import { AiControlsSheet } from "@/components/ai-controls-sheet";
 import { ChatMessage } from "@/components/chat-message";
 import { ConversationSidebar } from "@/components/conversation-sidebar";
@@ -36,6 +37,7 @@ import {
   type StoredAccount,
 } from "@/lib/account";
 import { buildCompletionHistory, createMessage, getModeSummary, type ChatImageAttachment, type ChatMessage as ChatMessageType, type ChatSettings } from "@/lib/chat";
+import { APP_BUILDER_TOKEN_COST, buildAppBuilderPrompt, canUseAppBuilder, getAppBuilderRequirementMessage } from "@/lib/app-builder";
 import { loadComposerDrafts, saveComposerDrafts, type ComposerDrafts } from "@/lib/composer-drafts";
 import {
   appendMessageToConversation,
@@ -71,6 +73,8 @@ export default function HomeScreen() {
   const [draftsReady, setDraftsReady] = useState(false);
   const [attachment, setAttachment] = useState<ChatImageAttachment | null>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [appBuilderOpen, setAppBuilderOpen] = useState(false);
+  const [isAppBuilding, setIsAppBuilding] = useState(false);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -90,6 +94,7 @@ export default function HomeScreen() {
   const settings = activeConversation?.settings ?? defaultSettings;
   const selectedModel = getAlsiModel(account?.selectedModelId ?? "lite");
   const outOfTokens = account ? account.tokens < selectedModel.tokenCost : false;
+  const appBuilderAvailable = canUseAppBuilder(selectedModel.id, settings);
 
   useEffect(() => {
     let isMounted = true;
@@ -434,6 +439,71 @@ export default function HomeScreen() {
     setAccount((previous) => previous ? { ...previous, selectedModelId: modelId } : previous);
   }, [account]);
 
+  const openAppBuilder = useCallback(() => {
+    if (!account) return;
+    if (!appBuilderAvailable) {
+      Alert.alert("App Builder locked", getAppBuilderRequirementMessage(selectedModel.id, settings));
+      return;
+    }
+    if (account.tokens < APP_BUILDER_TOKEN_COST) {
+      Alert.alert("More tokens needed", `App Builder Alpha costs ${APP_BUILDER_TOKEN_COST} tokens. You currently have ${account.tokens}.`);
+      return;
+    }
+
+    setControlsOpen(false);
+    setAppBuilderOpen(true);
+  }, [account, appBuilderAvailable, selectedModel.id, settings]);
+
+  const createAppBuildGuide = useCallback(async (idea: string) => {
+    const cleanIdea = idea.trim();
+    if (!cleanIdea || isSending || isAppBuilding || !account) return;
+    if (!canUseAppBuilder(selectedModel.id, settings)) {
+      Alert.alert("App Builder locked", getAppBuilderRequirementMessage(selectedModel.id, settings));
+      return;
+    }
+    if (!chargeTokens(refreshAccountTokens(account), APP_BUILDER_TOKEN_COST)) {
+      Alert.alert("More tokens needed", `App Builder Alpha costs ${APP_BUILDER_TOKEN_COST} tokens. Your balance has not been charged.`);
+      return;
+    }
+
+    const conversation = activeConversation ?? createConversation(settings);
+    const userMessage = createMessage("user", `App Builder brief: ${cleanIdea}`);
+    const updatedConversation = appendMessageToConversation(conversation, userMessage);
+    const requestMessages = [
+      ...buildCompletionHistory(conversation.messages),
+      { role: "user" as const, content: buildAppBuilderPrompt(cleanIdea) },
+    ];
+
+    setConversations((previous) => {
+      const exists = previous.some((item) => item.id === conversation.id);
+      const next = exists
+        ? previous.map((item) => (item.id === conversation.id ? updatedConversation : item))
+        : [updatedConversation, ...previous];
+      return sortConversations(next);
+    });
+    setActiveConversationId(conversation.id);
+    setAppBuilderOpen(false);
+    setIsAppBuilding(true);
+
+    try {
+      const response = await completion.mutateAsync({
+        messages: requestMessages,
+        mode: "thinking",
+        aggression: 3,
+        modelId: "pro",
+      });
+      const assistantMessage = createMessage("assistant", response.content);
+      updateConversation(conversation.id, (current) => appendMessageToConversation(current, assistantMessage));
+      setAccount((current) => current ? chargeTokens(refreshAccountTokens(current), APP_BUILDER_TOKEN_COST) ?? current : current);
+    } catch (error) {
+      const explanation = error instanceof Error ? error.message : "Please try again.";
+      const errorMessage = createMessage("assistant", explanation, { isError: true });
+      updateConversation(conversation.id, (current) => appendMessageToConversation(current, errorMessage));
+    } finally {
+      setIsAppBuilding(false);
+    }
+  }, [account, activeConversation, completion, isAppBuilding, isSending, selectedModel.id, settings, updateConversation]);
+
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<ChatMessageType>) => (
       <ChatMessage
@@ -612,7 +682,21 @@ export default function HomeScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      <AiControlsSheet onChange={updateSettings} onClose={() => setControlsOpen(false)} settings={settings} visible={controlsOpen} />
+      <AiControlsSheet
+        onChange={updateSettings}
+        onClose={() => setControlsOpen(false)}
+        onOpenAppBuilder={openAppBuilder}
+        selectedModelId={selectedModel.id}
+        settings={settings}
+        visible={controlsOpen}
+      />
+      <AppBuilderSheet
+        availableTokens={account.tokens}
+        isBuilding={isAppBuilding}
+        onBuild={(idea) => { void createAppBuildGuide(idea); }}
+        onClose={() => setAppBuilderOpen(false)}
+        visible={appBuilderOpen}
+      />
       <AccountSheet
         account={account}
         onClose={() => setAccountSheetOpen(false)}

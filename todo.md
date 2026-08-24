@@ -109,3 +109,7 @@
 - [x] Add local conversation search and clear conversation metadata for faster archive navigation.
 - [x] Improve composer behavior with draft persistence and a visible character limit for reliable message recovery.
 - [x] Validate, checkpoint, and publish the proactive product-improvement pass.
+- [x] Define secure eligibility and token rules for the Pro-only Alpha App Builder.
+- [x] Add the Thinking-and-Aggressive gated App Builder action and Alpha status treatment.
+- [x] Generate guided Expo project plans, safe local Termux instructions, and optional icon/EAS handoff guidance without handling user credentials.
+- [x] Add App Builder tests, validate the Android app, checkpoint, and publish the update to GitHub.
