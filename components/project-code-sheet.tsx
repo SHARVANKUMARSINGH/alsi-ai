@@ -10,9 +10,10 @@ type ProjectCodeSheetProps = {
   files: GeneratedProjectFile[];
   projectName: string;
   onClose: () => void;
+  onPublishToGitHub: () => void;
 };
 
-export function ProjectCodeSheet({ visible, files, projectName, onClose }: ProjectCodeSheetProps) {
+export function ProjectCodeSheet({ visible, files, projectName, onClose, onPublishToGitHub }: ProjectCodeSheetProps) {
   const [selectedPath, setSelectedPath] = useState("");
   const [exportApproved, setExportApproved] = useState(false);
   const [exportNotice, setExportNotice] = useState("");
@@ -97,6 +98,10 @@ export function ProjectCodeSheet({ visible, files, projectName, onClose }: Proje
                 <Text style={styles.clearButtonText}>Clear export state</Text>
               </Pressable>
             </View>
+            <Pressable onPress={onPublishToGitHub} style={({ pressed }) => [styles.githubButton, pressed && styles.pressed]}>
+              <MaterialCommunityIcons color="#FFFFFF" name="github" size={16} />
+              <Text style={styles.githubButtonText}>Publish reviewed files to GitHub</Text>
+            </Pressable>
             {exportNotice ? <Text style={styles.exportNotice}>{exportNotice}</Text> : null}
           </View>
         </View>
@@ -135,5 +140,7 @@ const styles = StyleSheet.create({
   clearButton: { alignItems: "center", borderColor: "#9DB8E5", borderRadius: 10, borderWidth: 1, justifyContent: "center", paddingHorizontal: 10 },
   clearButtonText: { color: "#285B9B", fontSize: 12, fontWeight: "800" },
   exportNotice: { color: "#426896", fontSize: 11, lineHeight: 15, marginTop: 10 },
+  githubButton: { alignItems: "center", backgroundColor: "#242423", borderRadius: 10, flexDirection: "row", gap: 7, justifyContent: "center", marginTop: 10, paddingVertical: 10 },
+  githubButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
 });

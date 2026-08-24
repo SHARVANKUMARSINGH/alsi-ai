@@ -22,6 +22,7 @@ import { AppBuilderSheet } from "@/components/app-builder-sheet";
 import { AiControlsSheet } from "@/components/ai-controls-sheet";
 import { ChatMessage } from "@/components/chat-message";
 import { ConversationSidebar } from "@/components/conversation-sidebar";
+import { GitHubPublishSheet } from "@/components/github-publish-sheet";
 import { LoginScreen } from "@/components/login-screen";
 import { ModelSelector } from "@/components/model-selector";
 import { ProjectCodeSheet } from "@/components/project-code-sheet";
@@ -77,6 +78,7 @@ export default function HomeScreen() {
   const [appBuilderOpen, setAppBuilderOpen] = useState(false);
   const [isAppBuilding, setIsAppBuilding] = useState(false);
   const [codeWorkspace, setCodeWorkspace] = useState<{ files: GeneratedProjectFile[]; projectName: string } | null>(null);
+  const [githubPublishOpen, setGithubPublishOpen] = useState(false);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -731,8 +733,15 @@ export default function HomeScreen() {
       <ProjectCodeSheet
         files={codeWorkspace?.files ?? []}
         onClose={() => setCodeWorkspace(null)}
+        onPublishToGitHub={() => setGithubPublishOpen(true)}
         projectName={codeWorkspace?.projectName ?? "Generated Expo project"}
         visible={Boolean(codeWorkspace)}
+      />
+      <GitHubPublishSheet
+        files={codeWorkspace?.files ?? []}
+        onClose={() => setGithubPublishOpen(false)}
+        projectName={codeWorkspace?.projectName ?? "Generated Expo project"}
+        visible={githubPublishOpen}
       />
     </ScreenContainer>
   );

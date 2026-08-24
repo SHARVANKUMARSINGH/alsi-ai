@@ -134,3 +134,7 @@
 - [x] Add an in-app code workspace with a complete file tree, selectable files, and readable source preview.
 - [x] Add explicit export approval guidance and clear all temporary export authorization state after each attempt.
 - [x] Add tests, validate the mobile app, checkpoint, and publish the workspace and export flow.
+- [x] Inspect GitHub account integration availability and define a credential-safe repository publishing contract.
+- [x] Add explicit user approval controls for a generated-project GitHub repository handoff.
+- [x] Add safe repository publishing guidance that keeps GitHub credentials out of the mobile app.
+- [x] Add tests, validate the mobile app, checkpoint, and publish the GitHub publishing flow.
