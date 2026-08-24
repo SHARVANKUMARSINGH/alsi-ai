@@ -148,4 +148,4 @@
 - [x] Verify the newly enabled Appwrite GitHub OAuth provider is ready for native publishing.
 - [x] Restore the explicit-approval GitHub OAuth publish flow and remove the user-entered key field.
 - [x] Add OAuth-path regression coverage and validate the restored Appwrite GitHub OAuth flow.
-- [ ] Checkpoint and publish the GitHub OAuth restoration.
+- [x] Checkpoint and publish the GitHub OAuth restoration.
