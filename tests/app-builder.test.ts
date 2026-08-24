@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { APP_BUILDER_TOKEN_COST, buildAppBuilderPrompt, canUseAppBuilder, extractCommandProposals, getAppBuilderRequirementMessage } from "../lib/app-builder";
+import { APP_BUILDER_TOKEN_COST, buildAppBuilderPrompt, canUseAppBuilder, createCompleteProjectFiles, extractCommandProposals, extractProjectFiles, getAppBuilderRequirementMessage } from "../lib/app-builder";
 import { APP_BUILDER_MODEL_ID, APP_BUILDER_OPENROUTER_MODEL, getOpenRouterModel } from "../lib/models";
 
 describe("App Builder Alpha", () => {
@@ -29,6 +29,8 @@ describe("App Builder Alpha", () => {
     expect(prompt).toContain("user must sign in to their own Expo account");
     expect(prompt).toContain("Never claim");
     expect(prompt).toContain("individual review and approval");
+    expect(prompt).toContain("Complete starter files");
+    expect(prompt).toContain("Do not ask them to paste a token into chat");
   });
 
   it("routes App Builder through the dedicated NVIDIA Ultra free model", () => {
@@ -52,5 +54,21 @@ describe("App Builder Alpha", () => {
     ].join("\n"));
 
     expect(commands).toEqual(["npx create-expo-app my-project", "cd my-project", "npm run start"]);
+  });
+
+  it("extracts labeled source files and fills gaps with a complete credential-free Expo starter", () => {
+    const response = [
+      "### FILE: `App.tsx`",
+      "```tsx",
+      "export default function App() { return null; }",
+      "```",
+    ].join("\n");
+
+    expect(extractProjectFiles(response)).toEqual([{ path: "App.tsx", language: "tsx", content: "export default function App() { return null; }" }]);
+    const files = createCompleteProjectFiles("Water reminder", response);
+
+    expect(files.map((file) => file.path)).toEqual(["App.tsx", "package.json", "app.json"]);
+    expect(files.find((file) => file.path === "package.json")?.content).not.toContain("EXPO_TOKEN");
+    expect(files.find((file) => file.path === "app.json")?.content).toContain("water-reminder");
   });
 });

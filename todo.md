@@ -130,3 +130,7 @@
 - [x] Create a non-sensitive sample App Builder brief and verify generated-guide and per-command approval behavior.
 - [x] Test Appwrite email OTP sign-up with a temporary mailbox and document any verified delivery or session issues.
 - [x] Repair verified defects, validate the mobile app, and publish any necessary changes.
+- [x] Define a safe generated-project file model and credential-free Expo export handoff contract.
+- [x] Add an in-app code workspace with a complete file tree, selectable files, and readable source preview.
+- [x] Add explicit export approval guidance and clear all temporary export authorization state after each attempt.
+- [x] Add tests, validate the mobile app, checkpoint, and publish the workspace and export flow.

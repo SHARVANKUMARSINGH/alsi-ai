@@ -24,6 +24,7 @@ import { ChatMessage } from "@/components/chat-message";
 import { ConversationSidebar } from "@/components/conversation-sidebar";
 import { LoginScreen } from "@/components/login-screen";
 import { ModelSelector } from "@/components/model-selector";
+import { ProjectCodeSheet } from "@/components/project-code-sheet";
 import { ThinkingIndicator } from "@/components/thinking-indicator";
 import { ScreenContainer } from "@/components/screen-container";
 import {
@@ -37,7 +38,7 @@ import {
   type StoredAccount,
 } from "@/lib/account";
 import { buildCompletionHistory, createMessage, getModeSummary, type ChatImageAttachment, type ChatMessage as ChatMessageType, type ChatSettings } from "@/lib/chat";
-import { APP_BUILDER_TOKEN_COST, buildAppBuilderPrompt, canUseAppBuilder, extractCommandProposals, getAppBuilderRequirementMessage } from "@/lib/app-builder";
+import { APP_BUILDER_TOKEN_COST, buildAppBuilderPrompt, canUseAppBuilder, createCompleteProjectFiles, extractCommandProposals, getAppBuilderRequirementMessage, type GeneratedProjectFile } from "@/lib/app-builder";
 import { loadComposerDrafts, saveComposerDrafts, type ComposerDrafts } from "@/lib/composer-drafts";
 import {
   appendMessageToConversation,
@@ -75,6 +76,7 @@ export default function HomeScreen() {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [appBuilderOpen, setAppBuilderOpen] = useState(false);
   const [isAppBuilding, setIsAppBuilding] = useState(false);
+  const [codeWorkspace, setCodeWorkspace] = useState<{ files: GeneratedProjectFile[]; projectName: string } | null>(null);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -498,7 +500,10 @@ export default function HomeScreen() {
         aggression: 3,
         modelId: "app-builder",
       });
-      const assistantMessage = createMessage("assistant", response.content, { commandProposals: extractCommandProposals(response.content) });
+      const assistantMessage = createMessage("assistant", response.content, {
+        commandProposals: extractCommandProposals(response.content),
+        projectFiles: createCompleteProjectFiles(cleanIdea, response.content),
+      });
       updateConversation(conversation.id, (current) => appendMessageToConversation(current, assistantMessage));
       setAccount((current) => current ? chargeTokens(refreshAccountTokens(current), APP_BUILDER_TOKEN_COST) ?? current : current);
     } catch (error) {
@@ -514,6 +519,7 @@ export default function HomeScreen() {
     ({ item }: ListRenderItemInfo<ChatMessageType>) => (
       <ChatMessage
         message={item}
+        onOpenProject={item.projectFiles?.length ? (message) => setCodeWorkspace({ files: message.projectFiles ?? [], projectName: "Generated Expo project" }) : undefined}
         onRetry={item.isError ? retryFailedMessage : undefined}
         quickCopyButtons={settings.quickCopyButtons !== false}
         retryDisabled={isSending}
@@ -721,6 +727,12 @@ export default function HomeScreen() {
         onOpenAccountSettings={() => { setSidebarOpen(false); setAccountSheetOpen(true); }}
         onUpgradeLogin={() => { setSidebarOpen(false); setLoginOpen(true); }}
         visible={sidebarOpen}
+      />
+      <ProjectCodeSheet
+        files={codeWorkspace?.files ?? []}
+        onClose={() => setCodeWorkspace(null)}
+        projectName={codeWorkspace?.projectName ?? "Generated Expo project"}
+        visible={Boolean(codeWorkspace)}
       />
     </ScreenContainer>
   );

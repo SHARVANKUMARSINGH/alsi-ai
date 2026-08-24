@@ -10,6 +10,7 @@ import type { ChatMessage as ChatMessageType } from "@/lib/chat";
 type ChatMessageProps = {
   message: ChatMessageType;
   onRetry?: (message: ChatMessageType) => void;
+  onOpenProject?: (message: ChatMessageType) => void;
   quickCopyButtons?: boolean;
   retryDisabled?: boolean;
 };
@@ -43,7 +44,7 @@ function createMarkdownRules(quickCopyButtons: boolean) {
   return { code_block: renderCodeBlock, fence: renderCodeBlock };
 }
 
-export function ChatMessage({ message, onRetry, quickCopyButtons = true, retryDisabled = false }: ChatMessageProps) {
+export function ChatMessage({ message, onRetry, onOpenProject, quickCopyButtons = true, retryDisabled = false }: ChatMessageProps) {
   const isUser = message.role === "user";
   const markdownRules = useMemo(() => createMarkdownRules(quickCopyButtons), [quickCopyButtons]);
 
@@ -75,6 +76,12 @@ export function ChatMessage({ message, onRetry, quickCopyButtons = true, retryDi
           <Markdown rules={markdownRules} style={markdownStyles}>{message.content}</Markdown>
         )}
         {!isUser && !message.isError && message.commandProposals?.length ? <CommandApprovalCard commands={message.commandProposals} /> : null}
+        {!isUser && !message.isError && message.projectFiles?.length && onOpenProject ? (
+          <Pressable accessibilityLabel="View the complete generated project code" onPress={() => onOpenProject(message)} style={({ pressed }) => [styles.projectButton, pressed && styles.pressed]}>
+            <MaterialCommunityIcons color="#235EBA" name="file-tree-outline" size={17} />
+            <Text style={styles.projectButtonText}>View complete project code</Text>
+          </Pressable>
+        ) : null}
         {message.isError && onRetry ? (
           <Pressable
             accessibilityLabel="Retry the last message"
@@ -114,6 +121,8 @@ const styles = StyleSheet.create({
   retryButton: { alignItems: "center", alignSelf: "flex-start", backgroundColor: "#FFFFFF", borderColor: "#E7B9B4", borderRadius: 10, borderWidth: 1, flexDirection: "row", gap: 6, marginTop: 11, paddingHorizontal: 10, paddingVertical: 7 },
   retryText: { color: "#A94039", fontSize: 12, fontWeight: "800" },
   retryDisabled: { opacity: 0.5 },
+  projectButton: { alignItems: "center", alignSelf: "flex-start", backgroundColor: "#EFF5FF", borderColor: "#C4D7F7", borderRadius: 10, borderWidth: 1, flexDirection: "row", gap: 7, marginTop: 11, paddingHorizontal: 10, paddingVertical: 8 },
+  projectButtonText: { color: "#235EBA", fontSize: 12, fontWeight: "800" },
   time: { color: "#9B9A97", fontSize: 11, marginTop: 6 },
   userTime: { paddingRight: 3 },
   assistantTime: { paddingLeft: 3 },

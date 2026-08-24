@@ -14,6 +14,12 @@ export type ChatImageAttachment = {
   mimeType: string;
 };
 
+export type GeneratedProjectFile = {
+  path: string;
+  language: string;
+  content: string;
+};
+
 export type ChatMessage = {
   id: string;
   role: "user" | "assistant";
@@ -22,6 +28,7 @@ export type ChatMessage = {
   isError?: boolean;
   attachment?: ChatImageAttachment;
   commandProposals?: string[];
+  projectFiles?: GeneratedProjectFile[];
 };
 
 export type ChatCompletionMessage = Pick<ChatMessage, "role" | "content">;
@@ -43,7 +50,7 @@ export const aggressionTemperatures: Record<AggressionLevel, number> = {
 export function createMessage(
   role: ChatMessage["role"],
   content: string,
-  options?: Pick<ChatMessage, "isError" | "attachment" | "commandProposals">,
+  options?: Pick<ChatMessage, "isError" | "attachment" | "commandProposals" | "projectFiles">,
 ): ChatMessage {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -53,6 +60,7 @@ export function createMessage(
     isError: options?.isError,
     attachment: options?.attachment,
     commandProposals: options?.commandProposals,
+    projectFiles: options?.projectFiles,
   };
 }
 
