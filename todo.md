@@ -127,3 +127,6 @@
 - [x] Remove the Ox Alpha preview model from all App Builder routing and user-facing guidance.
 - [x] Make NVIDIA Nemotron 3 Ultra free the primary App Builder model while retaining image locking and individual command approval.
 - [x] Update tests, validate Android behavior, checkpoint, and publish the revised App Builder model policy.
+- [x] Create a non-sensitive sample App Builder brief and verify generated-guide and per-command approval behavior.
+- [x] Test Appwrite email OTP sign-up with a temporary mailbox and document any verified delivery or session issues.
+- [x] Repair verified defects, validate the mobile app, and publish any necessary changes.
