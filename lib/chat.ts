@@ -21,6 +21,7 @@ export type ChatMessage = {
   createdAt: number;
   isError?: boolean;
   attachment?: ChatImageAttachment;
+  commandProposals?: string[];
 };
 
 export type ChatCompletionMessage = Pick<ChatMessage, "role" | "content">;
@@ -42,7 +43,7 @@ export const aggressionTemperatures: Record<AggressionLevel, number> = {
 export function createMessage(
   role: ChatMessage["role"],
   content: string,
-  options?: Pick<ChatMessage, "isError" | "attachment">,
+  options?: Pick<ChatMessage, "isError" | "attachment" | "commandProposals">,
 ): ChatMessage {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -51,6 +52,7 @@ export function createMessage(
     createdAt: Date.now(),
     isError: options?.isError,
     attachment: options?.attachment,
+    commandProposals: options?.commandProposals,
   };
 }
 

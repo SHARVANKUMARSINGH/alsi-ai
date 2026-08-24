@@ -113,3 +113,11 @@
 - [x] Add the Thinking-and-Aggressive gated App Builder action and Alpha status treatment.
 - [x] Generate guided Expo project plans, safe local Termux instructions, and optional icon/EAS handoff guidance without handling user credentials.
 - [x] Add App Builder tests, validate the Android app, checkpoint, and publish the update to GitHub.
+- [ ] Define the GitHub approved-account repository publishing contract and server-side credential boundary.
+- [ ] Add an explicit in-app confirmation flow for creating a private GitHub repository from an App Builder project.
+- [ ] Add server-side repository creation and generated-code publishing without exposing GitHub credentials to the mobile client.
+- [ ] Add tests, validate the Android app, checkpoint, and publish the GitHub repository feature.
+- [x] Verify the requested dedicated App Builder model route and audit the current flow for safe command handling.
+- [x] Lock image uploading during App Builder mode and route App Builder generation through the dedicated model contract.
+- [x] Add explicit per-command review and approval controls without allowing background or hidden command execution.
+- [x] Test the strengthened App Builder flow, validate Android behavior, checkpoint, and publish the update.

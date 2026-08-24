@@ -37,7 +37,7 @@ import {
   type StoredAccount,
 } from "@/lib/account";
 import { buildCompletionHistory, createMessage, getModeSummary, type ChatImageAttachment, type ChatMessage as ChatMessageType, type ChatSettings } from "@/lib/chat";
-import { APP_BUILDER_TOKEN_COST, buildAppBuilderPrompt, canUseAppBuilder, getAppBuilderRequirementMessage } from "@/lib/app-builder";
+import { APP_BUILDER_TOKEN_COST, buildAppBuilderPrompt, canUseAppBuilder, extractCommandProposals, getAppBuilderRequirementMessage } from "@/lib/app-builder";
 import { loadComposerDrafts, saveComposerDrafts, type ComposerDrafts } from "@/lib/composer-drafts";
 import {
   appendMessageToConversation,
@@ -95,6 +95,7 @@ export default function HomeScreen() {
   const selectedModel = getAlsiModel(account?.selectedModelId ?? "lite");
   const outOfTokens = account ? account.tokens < selectedModel.tokenCost : false;
   const appBuilderAvailable = canUseAppBuilder(selectedModel.id, settings);
+  const appBuilderModeActive = appBuilderOpen || isAppBuilding;
 
   useEffect(() => {
     let isMounted = true;
@@ -368,6 +369,10 @@ export default function HomeScreen() {
   }, [applyImagePickerResult]);
 
   const chooseImage = useCallback(async () => {
+    if (appBuilderModeActive) {
+      Alert.alert("Image upload locked", "Images are locked while App Builder Alpha is active so the build brief stays focused. Finish or close App Builder to attach an image.");
+      return;
+    }
     if (isSending || outOfTokens) return;
 
     try {
@@ -381,7 +386,7 @@ export default function HomeScreen() {
     } catch {
       Alert.alert("Image picker unavailable", "ALSI Ai could not open your photo library. Please try again.");
     }
-  }, [applyImagePickerResult, isSending, outOfTokens]);
+  }, [appBuilderModeActive, applyImagePickerResult, isSending, outOfTokens]);
 
   const openConversation = useCallback((conversation: Conversation) => {
     setActiveConversationId(conversation.id);
@@ -450,6 +455,7 @@ export default function HomeScreen() {
       return;
     }
 
+    setAttachment(null);
     setControlsOpen(false);
     setAppBuilderOpen(true);
   }, [account, appBuilderAvailable, selectedModel.id, settings]);
@@ -490,9 +496,9 @@ export default function HomeScreen() {
         messages: requestMessages,
         mode: "thinking",
         aggression: 3,
-        modelId: "pro",
+        modelId: "app-builder",
       });
-      const assistantMessage = createMessage("assistant", response.content);
+      const assistantMessage = createMessage("assistant", response.content, { commandProposals: extractCommandProposals(response.content) });
       updateConversation(conversation.id, (current) => appendMessageToConversation(current, assistantMessage));
       setAccount((current) => current ? chargeTokens(refreshAccountTokens(current), APP_BUILDER_TOKEN_COST) ?? current : current);
     } catch (error) {
@@ -643,12 +649,12 @@ export default function HomeScreen() {
               value={draft}
             />
             <Pressable
-              accessibilityLabel="Choose an image from your gallery"
-              disabled={isSending || outOfTokens}
+              accessibilityLabel={appBuilderModeActive ? "Image upload is locked while App Builder is active" : "Choose an image from your gallery"}
+              disabled={isSending || outOfTokens || appBuilderModeActive}
               onPress={chooseImage}
-              style={({ pressed }) => [styles.composerControl, (isSending || outOfTokens) && styles.controlDisabled, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.composerControl, (isSending || outOfTokens || appBuilderModeActive) && styles.controlDisabled, pressed && styles.pressed]}
             >
-              <MaterialCommunityIcons color="#5D5C59" name="image-outline" size={20} />
+              <MaterialCommunityIcons color={appBuilderModeActive ? "#A5A3A0" : "#5D5C59"} name={appBuilderModeActive ? "image-lock-outline" : "image-outline"} size={20} />
             </Pressable>
             <Pressable
               accessibilityLabel="Open response controls"

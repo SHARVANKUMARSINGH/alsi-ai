@@ -1,4 +1,7 @@
 export type AlsiModelId = "lite" | "standard" | "pro";
+export const APP_BUILDER_MODEL_ID = "app-builder" as const;
+export type CompletionModelId = AlsiModelId | typeof APP_BUILDER_MODEL_ID;
+export const APP_BUILDER_OPENROUTER_MODEL = "stealth/ox-alpha";
 
 export type AlsiModelRoute = {
   text: string;
@@ -50,7 +53,8 @@ export function getAlsiModel(modelId: AlsiModelId) {
   return alsiModels.find((model) => model.id === modelId) ?? alsiModels[0];
 }
 
-export function getOpenRouterModel(modelId: AlsiModelId, usesVision: boolean) {
+export function getOpenRouterModel(modelId: CompletionModelId, usesVision: boolean) {
+  if (modelId === APP_BUILDER_MODEL_ID) return APP_BUILDER_OPENROUTER_MODEL;
   const model = getAlsiModel(modelId);
   return model.openRouterModel[usesVision ? "vision" : "text"];
 }

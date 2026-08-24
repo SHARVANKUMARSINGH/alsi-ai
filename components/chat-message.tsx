@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { CopyableCodeBlock, getCodeLanguageLabel } from "@/components/copyable-code-block";
+import { CommandApprovalCard } from "@/components/command-approval-card";
 import type { ChatMessage as ChatMessageType } from "@/lib/chat";
 
 type ChatMessageProps = {
@@ -73,6 +74,7 @@ export function ChatMessage({ message, onRetry, quickCopyButtons = true, retryDi
         ) : (
           <Markdown rules={markdownRules} style={markdownStyles}>{message.content}</Markdown>
         )}
+        {!isUser && !message.isError && message.commandProposals?.length ? <CommandApprovalCard commands={message.commandProposals} /> : null}
         {message.isError && onRetry ? (
           <Pressable
             accessibilityLabel="Retry the last message"

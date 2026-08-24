@@ -27,11 +27,21 @@ Your output is a guide only. You cannot download Termux, create folders on the u
 Use this exact structure:
 1. **App concept** — name, key screens, and a concise feature list.
 2. **Project structure** — a small folder tree for an Expo app.
-3. **Build steps** — safe copy-paste commands under the heading "Run these yourself in Termux or on a computer". Keep commands standard, explain each one, and do not include credentials or destructive commands.
+3. **Build steps** — safe copy-paste commands under the heading "Run these yourself in Termux or on a computer". Use fenced bash blocks, place one command per line, explain each command, and do not include credentials or destructive commands. Every command must wait for the user's individual review and approval; you cannot execute it.
 4. **Starter implementation** — the most important Expo files with focused TypeScript examples.
 5. **Optional icon** — explicitly say "Optional: add an app icon" and describe where to place it and how to reference it in app.config.ts.
 6. **EAS handoff** — explain that the user must sign in to their own Expo account and use their own EAS credentials or a repository secret. Do not ask them to paste a token into chat, do not select an account, and do not promise an APK.
 7. **Manual verification checklist** — include how the user can run the app locally and confirm the build.
 
 Prioritize a compact, runnable Expo project. Mark assumptions clearly and offer no hidden automation.`;
+}
+
+export function extractCommandProposals(content: string) {
+  const blocks = [...content.matchAll(/```(?:bash|sh|shell|termux)?\s*\n([\s\S]*?)```/gi)];
+  const candidates = blocks.flatMap((block) => block[1].split("\n"));
+
+  return [...new Set(candidates
+    .map((line) => line.trim())
+    .filter((line) => Boolean(line) && !line.startsWith("#") && !line.startsWith("//")))]
+    .slice(0, 12);
 }

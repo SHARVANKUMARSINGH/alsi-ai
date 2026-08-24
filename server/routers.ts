@@ -27,7 +27,7 @@ const chatRequestSchema = z.object({
   messages: z.array(chatMessageSchema).min(1).max(30),
   mode: z.enum(["normal", "thinking"]),
   aggression: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]),
-  modelId: z.enum(["lite", "standard", "pro"]),
+  modelId: z.enum(["lite", "standard", "pro", "app-builder"]),
   imageBase64: imageBase64Schema.optional(),
   imageMediaType: imageMediaTypeSchema.optional(),
 });

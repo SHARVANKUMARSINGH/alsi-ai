@@ -1,5 +1,5 @@
 export const OPENROUTER_CHAT_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-import { getOpenRouterModel, type AlsiModelId } from "../lib/models";
+import { getOpenRouterModel, type AlsiModelId, type CompletionModelId } from "../lib/models";
 
 export const ALSI_MODEL = getOpenRouterModel("pro", false);
 export const OPENROUTER_OVERLOAD_MESSAGE = "The AI server is currently overloaded. Please try again in a few seconds.";
@@ -55,7 +55,7 @@ export function buildAttachmentAwareMessages(
 export type OpenRouterSettings = {
   mode: "normal" | "thinking";
   aggression: 0 | 1 | 2 | 3;
-  modelId: AlsiModelId;
+  modelId: CompletionModelId;
 };
 
 export const temperatureByAggression: Record<OpenRouterSettings["aggression"], number> = {
@@ -94,7 +94,7 @@ export function buildOpenRouterPayload(messages: OpenRouterChatMessage[], settin
 }
 
 export function shouldUseFreeVisionFallback(
-  modelId: AlsiModelId,
+  modelId: CompletionModelId,
   hasImageAttachment: boolean,
   status: number,
 ) {
