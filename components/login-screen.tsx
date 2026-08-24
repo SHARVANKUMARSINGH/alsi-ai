@@ -7,12 +7,13 @@ import { requestAppwriteOtp, type AppwriteAuthIntent, verifyAppwriteOtp } from "
 
 type LoginScreenProps = {
   onContinueAsGuest: () => void;
+  onGoogleSignIn: () => Promise<void>;
   onLogin: (email: string, intent: AppwriteAuthIntent) => Promise<void>;
 };
 
 type AuthChoice = "verify" | "guest";
 
-export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
+export function LoginScreen({ onContinueAsGuest, onGoogleSignIn, onLogin }: LoginScreenProps) {
   const [choice, setChoice] = useState<AuthChoice>("verify");
   const [authIntent, setAuthIntent] = useState<AppwriteAuthIntent>("signUp");
   const [email, setEmail] = useState("");
@@ -20,6 +21,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
   const [otpUserId, setOtpUserId] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,6 +72,18 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
       setError(cause instanceof Error ? cause.message : "We could not finish signing you in. Please try again.");
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    setIsGoogleSigningIn(true);
+    setError(null);
+    try {
+      await onGoogleSignIn();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Google sign-in could not be completed. Please try again.");
+    } finally {
+      setIsGoogleSigningIn(false);
     }
   };
 
@@ -150,9 +164,18 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
                     />
                   </View>
                   {error ? <Text style={styles.validation}>{error}</Text> : null}
-                  <Pressable disabled={isSending} onPress={sendOtp} style={({ pressed }) => [styles.loginButton, isSending && styles.disabled, pressed && styles.pressed]}>
+                  <Pressable disabled={isSending || isGoogleSigningIn} onPress={sendOtp} style={({ pressed }) => [styles.loginButton, (isSending || isGoogleSigningIn) && styles.disabled, pressed && styles.pressed]}>
                     <Text style={styles.loginButtonText}>{isSending ? "Sending code..." : isSignIn ? "Send sign-in OTP" : "Send sign-up OTP"}</Text>
                     <MaterialCommunityIcons color="#FFFFFF" name="email-fast-outline" size={18} />
+                  </Pressable>
+                  <View style={styles.dividerRow}>
+                    <View style={styles.divider} />
+                    <Text style={styles.dividerText}>OR</Text>
+                    <View style={styles.divider} />
+                  </View>
+                  <Pressable disabled={isSending || isGoogleSigningIn} onPress={() => { void signInWithGoogle(); }} style={({ pressed }) => [styles.googleButton, (isSending || isGoogleSigningIn) && styles.disabled, pressed && styles.pressed]}>
+                    <MaterialCommunityIcons color="#4285F4" name="google" size={19} />
+                    <Text style={styles.googleButtonText}>{isGoogleSigningIn ? "Opening Google…" : "Continue with Google"}</Text>
                   </Pressable>
                   <Pressable onPress={toggleAuthIntent} style={({ pressed }) => [styles.authSwitchButton, pressed && styles.pressed]}>
                     <Text style={styles.authSwitchText}>{isSignIn ? "New to ALSI Ai? Sign up" : "Already have an account? Sign in"}</Text>
@@ -224,6 +247,11 @@ const styles = StyleSheet.create({
   validation: { color: "#C1544C", fontSize: 11, lineHeight: 16, marginBottom: 10, marginTop: -7 },
   loginButton: { alignItems: "center", backgroundColor: "#171716", borderRadius: 14, flexDirection: "row", gap: 8, justifyContent: "center", marginTop: 3, paddingVertical: 14 },
   loginButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
+  dividerRow: { alignItems: "center", flexDirection: "row", gap: 9, marginTop: 17 },
+  divider: { backgroundColor: "#E5E1DB", flex: 1, height: 1 },
+  dividerText: { color: "#9A9690", fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
+  googleButton: { alignItems: "center", backgroundColor: "#FFFFFF", borderColor: "#DDD9D2", borderRadius: 14, borderWidth: 1, flexDirection: "row", gap: 9, justifyContent: "center", marginTop: 14, paddingVertical: 13 },
+  googleButtonText: { color: "#343330", fontSize: 15, fontWeight: "800" },
   authSwitchButton: { alignItems: "center", marginTop: 15, paddingVertical: 4 },
   authSwitchText: { color: "#A93D35", fontSize: 12, fontWeight: "800" },
   guestButton: { alignItems: "center", backgroundColor: "#171716", borderRadius: 14, flexDirection: "row", gap: 8, justifyContent: "center", paddingVertical: 14 },

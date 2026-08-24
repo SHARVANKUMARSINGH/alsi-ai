@@ -159,3 +159,7 @@
 - [x] Confirm the App Builder gate, model route, project-file generation, and command-review test scope.
 - [x] Run controlled App Builder live generation and safety checks without executing proposed commands; the live NVIDIA request was rate-limited, with no defect or unsafe behavior observed.
 - [x] Run focused regression and Android package validation; repair only verified App Builder defects.
+- [x] Confirm the enabled Appwrite Google provider is ready for the native callback flow and account-token handling.
+- [x] Add a Continue with Google control while preserving email OTP sign-in and sign-up.
+- [x] Validate Google OAuth readiness, authentication regressions, and Android export.
+- [ ] Checkpoint and publish the Google sign-in update.

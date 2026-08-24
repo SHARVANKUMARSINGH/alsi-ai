@@ -50,7 +50,7 @@ import {
   type Conversation,
 } from "@/lib/conversations";
 import { getAlsiModel, type AlsiModelId } from "@/lib/models";
-import { completeAppwriteAuth, saveAppwriteAccount, signOutAppwriteSession, type AppwriteAuthIntent } from "@/lib/appwrite-account";
+import { completeAppwriteAuth, saveAppwriteAccount, signInWithAppwriteGoogle, signOutAppwriteSession, type AppwriteAuthIntent } from "@/lib/appwrite-account";
 import { trpc } from "@/lib/trpc";
 
 const starterPrompts = [
@@ -425,6 +425,12 @@ export default function HomeScreen() {
     setLoginOpen(false);
   }, []);
 
+  const loginWithGoogle = useCallback(async () => {
+    const appwriteAccount = await signInWithAppwriteGoogle();
+    setAccount(refreshAccountTokens(appwriteAccount));
+    setLoginOpen(false);
+  }, []);
+
   const continueAsGuest = useCallback(() => {
     setAccount((previous) => previous ?? createGuestAccount());
     setLoginOpen(false);
@@ -562,7 +568,7 @@ export default function HomeScreen() {
   }
 
   if (!account || loginOpen) {
-    return <LoginScreen onContinueAsGuest={continueAsGuest} onLogin={login} />;
+    return <LoginScreen onContinueAsGuest={continueAsGuest} onGoogleSignIn={loginWithGoogle} onLogin={login} />;
   }
 
   return (

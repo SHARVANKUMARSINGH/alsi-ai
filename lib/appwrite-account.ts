@@ -1,8 +1,11 @@
-import type { Models } from "react-native-appwrite";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import type { Models, OAuthProvider } from "react-native-appwrite";
 
 import { createLoggedInAccount, type StoredAccount } from "./account";
 import {
   APPWRITE_DATABASE_ID,
+  APPWRITE_OAUTH_CALLBACK_SCHEME,
   APPWRITE_USERS_COLLECTION_ID,
   ID,
   Query,
@@ -101,6 +104,46 @@ export async function completeAppwriteAuth(email: string, intent: AppwriteAuthIn
   );
 
   return fromDocument(created, now);
+}
+
+export async function completeAppwriteSocialAuth(email: string, now = Date.now()): Promise<StoredAccount> {
+  const normalizedEmail = normalizeEmail(email);
+  const existing = await findUserDocument(normalizedEmail);
+  if (existing) return fromDocument(existing, now);
+
+  const account = createLoggedInAccount(normalizedEmail, now);
+  const created = await appwriteDatabases.createDocument<AppwriteUserDocument>(
+    APPWRITE_DATABASE_ID,
+    APPWRITE_USERS_COLLECTION_ID,
+    ID.unique(),
+    {
+      email: normalizedEmail,
+      tokens: account.tokens,
+      last_login: new Date(account.lastRenewedAt).toISOString(),
+    },
+  );
+
+  return fromDocument(created, now);
+}
+
+export async function signInWithAppwriteGoogle() {
+  const redirectUrl = Linking.createURL("localhost", { scheme: APPWRITE_OAUTH_CALLBACK_SCHEME });
+  const authorizationUrl = appwriteAccount.createOAuth2Session({
+    provider: "google" as OAuthProvider,
+    success: redirectUrl,
+    failure: redirectUrl,
+  });
+  if (!authorizationUrl) throw new Error("Google sign-in could not be started.");
+
+  const result = await WebBrowser.openAuthSessionAsync(authorizationUrl.toString(), redirectUrl);
+  if (result.type !== "success") throw new Error("Google sign-in was cancelled or did not finish.");
+
+  const session = await appwriteAccount.getSession("current");
+  if (session.provider !== "google") throw new Error("Google sign-in did not return a Google session. Please try again.");
+
+  const user = await appwriteAccount.get();
+  if (!user.email) throw new Error("Google did not provide an email address for this account.");
+  return completeAppwriteSocialAuth(user.email);
 }
 
 export async function saveAppwriteAccount(account: StoredAccount) {
