@@ -144,4 +144,4 @@
 - [x] Define the one-time user-supplied GitHub personal-token boundary without reusing the project credential.
 - [x] Add a secure in-memory personal-token publish option with explicit approval and immediate clearing after every attempt.
 - [x] Add tests and validate token clearing behavior for the one-time publishing update.
-- [ ] Checkpoint and publish the one-time publishing update.
+- [x] Checkpoint and publish the one-time publishing update.
