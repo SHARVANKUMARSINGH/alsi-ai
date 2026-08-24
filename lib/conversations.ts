@@ -31,6 +31,8 @@ const titleLeadVerbs = new Set([
   "analyze", "brainstorm", "build", "create", "debug", "describe", "draft", "explain", "fix", "generate", "make", "outline", "plan", "summarize", "translate", "write",
 ]);
 
+const IMAGE_ATTACHMENT_PLACEHOLDER = "image attachment";
+
 function titleCase(word: string) {
   if (/^[A-Z0-9]{2,}$/.test(word)) return word;
   return `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`;
@@ -57,11 +59,17 @@ export function generateConversationTitle(content: string) {
 
 export function getConversationTitle(messages: ChatMessage[]) {
   const firstUserMessage = messages.find((message) => message.role === "user" && !message.isError);
+  if (firstUserMessage?.content.trim().toLowerCase() === IMAGE_ATTACHMENT_PLACEHOLDER) {
+    return "Image analysis";
+  }
   return firstUserMessage ? generateConversationTitle(firstUserMessage.content) : "New conversation";
 }
 
 export function getConversationPreview(messages: ChatMessage[]) {
   const lastMessage = messages.at(-1);
+  if (lastMessage?.content.trim().toLowerCase() === IMAGE_ATTACHMENT_PLACEHOLDER) {
+    return "Image attached";
+  }
   return lastMessage ? getTextPreview(lastMessage.content, 54) : "No messages yet";
 }
 

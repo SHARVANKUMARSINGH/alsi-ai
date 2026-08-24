@@ -92,3 +92,7 @@ export async function loadStoredAccount(): Promise<StoredAccount | null> {
 export async function saveStoredAccount(account: StoredAccount) {
   await AsyncStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(account));
 }
+
+export async function clearStoredAccount() {
+  await AsyncStorage.removeItem(ACCOUNT_STORAGE_KEY);
+}

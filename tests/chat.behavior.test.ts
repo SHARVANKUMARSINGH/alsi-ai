@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { ALSI_MODEL, OPENROUTER_OVERLOAD_MESSAGE, buildAttachmentAwareMessages, buildOpenRouterPayload, parseOpenRouterCompletion, shouldUseFreeVisionFallback } from "../server/openrouter";
+import { buildCompletionHistory } from "../lib/chat";
+import { ALSI_MODEL, OPENROUTER_OVERLOAD_MESSAGE, buildAttachmentAwareMessages, buildOpenRouterPayload, parseOpenRouterCompletion, shouldUseFreeVisionFallback, userSafeOpenRouterError } from "../server/openrouter";
 
 describe("ALSI OpenRouter payload", () => {
   const messages = [{ role: "user" as const, content: "Explain magnetic fields." }];
@@ -55,6 +56,19 @@ describe("ALSI OpenRouter payload", () => {
     ]);
   });
 
+  it("gives image-only messages a useful analysis instruction without changing their stored label", () => {
+    const requestMessages = buildAttachmentAwareMessages(
+      [{ role: "user", content: "Image attachment" }],
+      "aW1hZ2U=",
+      "image/jpeg",
+    );
+
+    expect(requestMessages[0]?.content).toEqual([
+      { type: "text", text: "Please analyze the attached image and describe the important details." },
+      { type: "image_url", image_url: { url: "data:image/jpeg;base64,aW1hZ2U=" } },
+    ]);
+  });
+
   it("does not attempt JSON parsing for an upstream HTML or plain-text error body", () => {
     expect(parseOpenRouterCompletion("<html>Gateway timeout</html>")).toBeNull();
     expect(parseOpenRouterCompletion("error: provider unavailable")).toBeNull();
@@ -67,5 +81,29 @@ describe("ALSI OpenRouter payload", () => {
     expect(shouldUseFreeVisionFallback("pro", true, 429)).toBe(false);
     expect(shouldUseFreeVisionFallback("lite", false, 429)).toBe(false);
     expect(shouldUseFreeVisionFallback("standard", true, 400)).toBe(false);
+  });
+
+  it("returns specific, recoverable messages for upstream credential and traffic failures", () => {
+    expect(userSafeOpenRouterError(401)).toContain("credentials");
+    expect(userSafeOpenRouterError(429)).toContain("too many requests");
+    expect(userSafeOpenRouterError(503)).toContain("temporarily unavailable");
+  });
+
+  it("keeps only the newest valid context when a long chat exceeds the request limit", () => {
+    const messages = Array.from({ length: 32 }, (_, index) => ({
+      id: `message-${index}`,
+      role: index % 2 === 0 ? "user" as const : "assistant" as const,
+      content: `message ${index}`,
+      createdAt: index,
+      isError: index === 31,
+    }));
+    const nextMessage = { id: "next", role: "user" as const, content: "latest", createdAt: 33 };
+
+    const history = buildCompletionHistory(messages, nextMessage);
+
+    expect(history).toHaveLength(30);
+    expect(history[0]?.content).toBe("message 2");
+    expect(history.at(-1)?.content).toBe("latest");
+    expect(history.some((message) => message.content === "message 31")).toBe(false);
   });
 });

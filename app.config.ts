@@ -50,7 +50,8 @@ const config: ExpoConfig = {
       projectId: env.easProjectId,
     },
   },
-  userInterfaceStyle: "automatic",
+  // The app intentionally ships a high-contrast light interface on every platform.
+  userInterfaceStyle: "light",
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
@@ -72,11 +73,9 @@ const config: ExpoConfig = {
     intentFilters: [
       {
         action: "VIEW",
-        autoVerify: true,
         data: [
           {
             scheme: env.scheme,
-            host: "*",
           },
         ],
         category: ["BROWSABLE", "DEFAULT"],

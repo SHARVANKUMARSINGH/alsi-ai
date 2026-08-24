@@ -6,9 +6,9 @@
 
 - **Multimodal chat:** Attach a gallery image or send text-only prompts. Image requests use OpenRouter-compatible text and `image_url` content parts.
 - **Tiered AI access:** ALSI Lite, ALSI Standard, and Alsi Pro have separate token costs, guest restrictions, and text/vision model routes.
-- **Resilient AI requests:** Non-JSON upstream responses display a friendly overload message. Lite and Standard vision requests retry through the OpenRouter Free router when a primary free provider is unavailable.
+- **Resilient AI requests:** Non-JSON upstream responses and status-specific upstream failures display clear, user-safe recovery guidance. Lite and Standard vision requests retry through the OpenRouter Free router when a primary free provider is unavailable.
 - **Authentication and account balance:** Native Appwrite email-token OTP supports sign in and sign up while preserving existing user balances. Guest accounts receive local non-renewing tokens; verified accounts renew to 100 tokens every four hours.
-- **Chat archive:** Conversations are persisted locally and can be created, opened, and deleted from the sidebar.
+- **Chat archive:** Conversations are persisted locally and can be created, opened, and deleted from the sidebar. Image-led chats receive a clear analysis title instead of a raw attachment placeholder.
 - **Developer-friendly messages:** Markdown responses support code blocks with language labels, dark code styling, horizontal scrolling, and optional one-tap copy buttons.
 - **Mobile polish:** Android keyboard resizing, gallery attachment previews, adaptive Android icon assets, and safe-area-aware layouts are configured.
 
@@ -40,6 +40,8 @@ pnpm lint
 npx expo export:embed --eager --platform android --dev false
 ```
 
+During installation, a small post-install safeguard removes the obsolete nested `expo-file-system` copy shipped by the current Appwrite React Native SDK. Appwrite then uses Expo SDK 54’s single root `expo-file-system` module, preventing native-module duplication in Android builds.
+
 ## Required configuration
 
 Create the required backend and AI environment values through your deployment or secret-management settings. **Never commit API keys, Expo access tokens, database URLs, or Appwrite credentials to this repository.**
@@ -51,7 +53,7 @@ Create a project checkpoint, then use the managed **Publish** control in the pro
 ## GitHub Actions cloud APK build
 
 The repository includes a manual workflow at `.github/workflows/build-apk.yml`. It installs the project, authenticates to Expo through the encrypted `EXPO_TOKEN` repository secret, and triggers an EAS **preview** Android APK build.
-Before the first GitHub Actions build, link ALSI Ai to a **new** EAS project owned by the intended Expo account. EAS requires a newly generated `extra.eas.projectId` for that account; do not restore an identifier from a previous Expo account. Once linked, open the repository’s **Actions** tab and run **Cloud Android APK**. The EAS build URL is shown in the workflow log.
+ALSI Ai is already linked to its active EAS project. Add a valid Expo token only through the encrypted `EXPO_TOKEN` repository secret, then open the repository’s **Actions** tab and run **Cloud Android APK**. The EAS build URL is shown in the workflow log. If the Expo ownership changes in the future, relink the project intentionally and update `extra.eas.projectId`; do not commit any personal access token.
 
 ## License
 

@@ -85,7 +85,7 @@ export function LoginScreen({ onContinueAsGuest, onLogin }: LoginScreenProps) {
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-background">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.flex}>
         <View style={styles.content}>
           <View style={styles.hero}>
             <Image accessibilityLabel="ALSI Ai logo" source={require("../assets/images/icon.png")} style={styles.mark} />

@@ -65,6 +65,14 @@ export async function verifyAppwriteOtp(userId: string, secret: string) {
   return appwriteAccount.createSession(userId, secret);
 }
 
+export async function signOutAppwriteSession() {
+  try {
+    await appwriteAccount.deleteSession("current");
+  } catch {
+    // A missing or expired session is already equivalent to being signed out.
+  }
+}
+
 export async function completeAppwriteAuth(email: string, intent: AppwriteAuthIntent, now = Date.now()): Promise<StoredAccount> {
   const normalizedEmail = normalizeEmail(email);
   const existing = await findUserDocument(normalizedEmail);

@@ -24,8 +24,9 @@ export function ModelSelector({ accountMode, onSelectModel, selectedModelId }: M
           return (
             <Pressable
               key={model.id}
+              accessibilityHint={isLocked ? "Tap to learn how to unlock this model." : "Double tap to select this model."}
               accessibilityLabel={`${isLocked ? "Locked " : ""}${model.label}, ${model.tokenCost} tokens per message`}
-              accessibilityState={{ disabled: false, selected: isSelected }}
+              accessibilityState={{ selected: isSelected }}
               onPress={() => onSelectModel(model.id)}
               style={({ pressed }) => [styles.option, isSelected && styles.optionSelected, isLocked && styles.optionLocked, pressed && styles.pressed]}
             >

@@ -17,6 +17,13 @@ function isImageContentPart(part: OpenRouterContentPart) {
   return part.type === "image_url";
 }
 
+function getImagePrompt(content: OpenRouterChatMessage["content"]) {
+  const text = typeof content === "string" ? content.trim() : "";
+  return text.toLowerCase() === "image attachment"
+    ? "Please analyze the attached image and describe the important details."
+    : text;
+}
+
 export function buildAttachmentAwareMessages(
   messages: OpenRouterChatMessage[],
   imageBase64?: string,
@@ -34,7 +41,7 @@ export function buildAttachmentAwareMessages(
       ? {
           ...message,
           content: [
-            { type: "text" as const, text: typeof message.content === "string" ? message.content : "" },
+            { type: "text" as const, text: getImagePrompt(message.content) },
             {
               type: "image_url" as const,
               image_url: { url: `data:${imageMediaType};base64,${imageBase64}` },

@@ -22,6 +22,18 @@ describe("conversation helpers", () => {
     expect(generateConversationTitle("Explain how to build a Python JSON parser.")).toBe("Build Python JSON Parser");
   });
 
+  it("gives image-only chats a useful name instead of exposing the internal attachment placeholder", () => {
+    const conversation = appendMessageToConversation(createConversation(settings), {
+      id: "image-only",
+      role: "user",
+      content: "Image attachment",
+      createdAt: 50,
+    });
+
+    expect(conversation.title).toBe("Image analysis");
+    expect(getConversationPreview(conversation.messages)).toBe("Image attached");
+  });
+
   it("sorts saved chats by their last update", () => {
     const older = { ...createConversation(settings), id: "older", updatedAt: 10 };
     const newer = { ...createConversation(settings), id: "newer", updatedAt: 20 };

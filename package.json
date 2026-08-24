@@ -12,6 +12,7 @@
     "check": "tsc --noEmit",
     "lint": "expo lint",
     "format": "prettier --write .",
+    "postinstall": "node scripts/dedupe-appwrite-filesystem.mjs",
     "test": "vitest run",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "android": "expo run:android",

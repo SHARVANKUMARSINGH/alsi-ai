@@ -100,3 +100,7 @@
 - [x] Inspect the failing Cloud Android APK GitHub Actions run and identify the blocking step.
 - [x] Remove optional cache dependencies and harden the cloud APK workflow against temporary CI service failures.
 - [x] Validate and publish the repaired Cloud Android APK workflow.
+- [x] Audit ALSI Ai source, native configuration, tests, and CI logs for actionable defects and rough edges.
+- [x] Repair high-priority functional bugs and improve user-facing error and loading behavior.
+- [x] Strengthen mobile configuration, GitHub Actions reliability, and regression tests.
+- [x] Validate the complete quality pass and publish all repairs to GitHub main.

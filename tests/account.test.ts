@@ -37,4 +37,12 @@ describe("ALSI account and token helpers", () => {
   it("rejects token charges greater than the available balance", () => {
     expect(chargeTokens({ ...createGuestAccount(), tokens: 0 }, 1)).toBeNull();
   });
+
+  it("keeps the balance unchanged until a completion has actually succeeded", () => {
+    const account = createGuestAccount(100);
+
+    expect(account.tokens).toBe(GUEST_STARTING_TOKENS);
+    expect(chargeTokens(account, 1)?.tokens).toBe(GUEST_STARTING_TOKENS - 1);
+    expect(account.tokens).toBe(GUEST_STARTING_TOKENS);
+  });
 });

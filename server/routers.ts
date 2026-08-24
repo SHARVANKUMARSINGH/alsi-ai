@@ -12,6 +12,7 @@ import {
   buildOpenRouterPayload,
   parseOpenRouterCompletion,
   shouldUseFreeVisionFallback,
+  userSafeOpenRouterError,
 } from "./openrouter";
 
 const chatMessageSchema = z.object({
@@ -91,7 +92,7 @@ export const appRouter = router({
           });
           throw new TRPCError({
             code: "BAD_GATEWAY",
-            message: OPENROUTER_OVERLOAD_MESSAGE,
+            message: userSafeOpenRouterError(response.status),
           });
         }
 

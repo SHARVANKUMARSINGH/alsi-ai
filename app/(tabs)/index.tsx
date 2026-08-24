@@ -27,13 +27,14 @@ import { ScreenContainer } from "@/components/screen-container";
 import {
   canAccessModel,
   chargeTokens,
+  clearStoredAccount,
   createGuestAccount,
   loadStoredAccount,
   refreshAccountTokens,
   saveStoredAccount,
   type StoredAccount,
 } from "@/lib/account";
-import { createMessage, getModeSummary, type ChatImageAttachment, type ChatMessage as ChatMessageType, type ChatSettings } from "@/lib/chat";
+import { buildCompletionHistory, createMessage, getModeSummary, type ChatImageAttachment, type ChatMessage as ChatMessageType, type ChatSettings } from "@/lib/chat";
 import {
   appendMessageToConversation,
   createConversation,
@@ -43,7 +44,7 @@ import {
   type Conversation,
 } from "@/lib/conversations";
 import { getAlsiModel, type AlsiModelId } from "@/lib/models";
-import { completeAppwriteAuth, saveAppwriteAccount, type AppwriteAuthIntent } from "@/lib/appwrite-account";
+import { completeAppwriteAuth, saveAppwriteAccount, signOutAppwriteSession, type AppwriteAuthIntent } from "@/lib/appwrite-account";
 import { trpc } from "@/lib/trpc";
 
 const starterPrompts = [
@@ -169,6 +170,7 @@ export default function HomeScreen() {
     setConversations((previous) => sortConversations([conversation, ...previous]));
     setActiveConversationId(conversation.id);
     setDraft("");
+    setAttachment(null);
     setSidebarOpen(false);
   }, []);
 
@@ -193,8 +195,7 @@ export default function HomeScreen() {
 
     if (!account) return;
     const refreshedAccount = refreshAccountTokens(account);
-    const chargedAccount = chargeTokens(refreshedAccount, selectedModel.tokenCost);
-    if (!chargedAccount) {
+    if (!chargeTokens(refreshedAccount, selectedModel.tokenCost)) {
       Alert.alert("Out of tokens", "Out of tokens. Log in or wait for your 4-hour renewal.");
       return;
     }
@@ -202,10 +203,7 @@ export default function HomeScreen() {
     Keyboard.dismiss();
     const conversation = activeConversation ?? createConversation(defaultSettings);
     const userMessage = createMessage("user", content || "Image attachment", { attachment: attachment ?? undefined });
-    const requestMessages = [...conversation.messages.filter((message) => !message.isError), userMessage].map(({ role, content: messageContent }) => ({
-      role,
-      content: messageContent,
-    }));
+    const requestMessages = buildCompletionHistory(conversation.messages, userMessage);
     const updatedConversation = appendMessageToConversation(conversation, userMessage);
 
     setConversations((previous) => {
@@ -216,7 +214,6 @@ export default function HomeScreen() {
       return sortConversations(next);
     });
     setActiveConversationId(conversation.id);
-    setAccount(chargedAccount);
     setDraft("");
     setAttachment(null);
 
@@ -231,6 +228,10 @@ export default function HomeScreen() {
       });
       const assistantMessage = createMessage("assistant", response.content);
       updateConversation(conversation.id, (current) => appendMessageToConversation(current, assistantMessage));
+      setAccount((current) => {
+        if (!current) return current;
+        return chargeTokens(refreshAccountTokens(current), selectedModel.tokenCost) ?? current;
+      });
     } catch (error) {
       const explanation = error instanceof Error ? error.message : "Please try again.";
       const errorMessage = createMessage("assistant", explanation, { isError: true });
@@ -238,17 +239,9 @@ export default function HomeScreen() {
     }
   }, [account, activeConversation, attachment, completion, draft, isSending, selectedModel, updateConversation]);
 
-  const chooseImage = useCallback(async () => {
-    if (isSending || outOfTokens) return;
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      base64: true,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
-      selectionLimit: 1,
-    });
-
+  const applyImagePickerResult = useCallback((result: ImagePicker.ImagePickerResult) => {
     if (result.canceled) return;
+
     const asset = result.assets[0];
     if (!asset?.base64) {
       Alert.alert("Image unavailable", "ALSI Ai could not read the selected image. Please try another image.");
@@ -265,23 +258,63 @@ export default function HomeScreen() {
       base64: asset.base64,
       mimeType: asset.mimeType ?? "image/jpeg",
     });
-  }, [isSending, outOfTokens]);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    ImagePicker.getPendingResultAsync()
+      .then((result) => {
+        if (isMounted && result && !("code" in result)) applyImagePickerResult(result);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [applyImagePickerResult]);
+
+  const chooseImage = useCallback(async () => {
+    if (isSending || outOfTokens) return;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        base64: true,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7,
+        selectionLimit: 1,
+      });
+      applyImagePickerResult(result);
+    } catch {
+      Alert.alert("Image picker unavailable", "ALSI Ai could not open your photo library. Please try again.");
+    }
+  }, [applyImagePickerResult, isSending, outOfTokens]);
 
   const openConversation = useCallback((conversation: Conversation) => {
     setActiveConversationId(conversation.id);
     setDraft("");
+    setAttachment(null);
     setSidebarOpen(false);
   }, []);
 
   const deleteConversation = useCallback((conversationId: string) => {
-    setConversations((previous) => {
-      const next = previous.filter((conversation) => conversation.id !== conversationId);
-      if (conversationId === activeConversationId) {
-        setActiveConversationId(next[0]?.id ?? null);
-        setDraft("");
-      }
-      return next;
-    });
+    Alert.alert("Delete conversation?", "This chat is stored only on this device and cannot be restored after deletion.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          setConversations((previous) => {
+            const next = previous.filter((conversation) => conversation.id !== conversationId);
+            if (conversationId === activeConversationId) {
+              setActiveConversationId(next[0]?.id ?? null);
+              setDraft("");
+              setAttachment(null);
+            }
+            return next;
+          });
+        },
+      },
+    ]);
   }, [activeConversationId]);
 
   const login = useCallback(async (email: string, intent: AppwriteAuthIntent) => {
@@ -293,6 +326,14 @@ export default function HomeScreen() {
   const continueAsGuest = useCallback(() => {
     setAccount((previous) => previous ?? createGuestAccount());
     setLoginOpen(false);
+  }, []);
+
+  const signOut = useCallback(async () => {
+    setSidebarOpen(false);
+    await signOutAppwriteSession();
+    await clearStoredAccount();
+    setAccount(null);
+    setLoginOpen(true);
   }, []);
 
   const selectModel = useCallback((modelId: AlsiModelId) => {
@@ -484,6 +525,7 @@ export default function HomeScreen() {
         onCreateConversation={startNewConversation}
         onDeleteConversation={deleteConversation}
         onOpenConversation={openConversation}
+        onSignOut={() => { void signOut(); }}
         onUpgradeLogin={() => { setSidebarOpen(false); setLoginOpen(true); }}
         visible={sidebarOpen}
       />

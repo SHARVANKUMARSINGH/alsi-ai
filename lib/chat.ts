@@ -23,6 +23,8 @@ export type ChatMessage = {
   attachment?: ChatImageAttachment;
 };
 
+export type ChatCompletionMessage = Pick<ChatMessage, "role" | "content">;
+
 export const aggressionLabels: Record<AggressionLevel, string> = {
   0: "Balanced",
   1: "Expressive",
@@ -50,6 +52,22 @@ export function createMessage(
     isError: options?.isError,
     attachment: options?.attachment,
   };
+}
+
+/**
+ * Keeps a request within the server-side message limit while preserving the
+ * newest useful context. Failed assistant messages are local feedback only and
+ * must not be sent back to the model as conversational context.
+ */
+export function buildCompletionHistory(
+  messages: ChatMessage[],
+  nextMessage: ChatMessage,
+  limit = 30,
+): ChatCompletionMessage[] {
+  return [...messages, nextMessage]
+    .filter((message) => !message.isError)
+    .slice(-limit)
+    .map(({ role, content }) => ({ role, content }));
 }
 
 export function getModeSummary(mode: ChatMode) {

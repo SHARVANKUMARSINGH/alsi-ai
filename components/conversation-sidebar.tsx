@@ -12,6 +12,7 @@ type ConversationSidebarProps = {
   onCreateConversation: () => void;
   onDeleteConversation: (id: string) => void;
   onOpenConversation: (conversation: Conversation) => void;
+  onSignOut: () => void;
   onUpgradeLogin: () => void;
   visible: boolean;
 };
@@ -34,6 +35,7 @@ export function ConversationSidebar({
   onCreateConversation,
   onDeleteConversation,
   onOpenConversation,
+  onSignOut,
   onUpgradeLogin,
   visible,
 }: ConversationSidebarProps) {
@@ -66,7 +68,16 @@ export function ConversationSidebar({
               </View>
               <MaterialCommunityIcons color="#A93D35" name="chevron-right" size={18} />
             </Pressable>
-          ) : null}
+          ) : (
+            <Pressable accessibilityLabel="Sign out and switch account" onPress={onSignOut} style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}>
+              <MaterialCommunityIcons color="#7D4A45" name="logout-variant" size={17} />
+              <View style={styles.upgradeCopy}>
+                <Text style={styles.signOutTitle}>Signed in</Text>
+                <Text style={styles.signOutBody}>Sign out to switch accounts</Text>
+              </View>
+              <MaterialCommunityIcons color="#7D4A45" name="chevron-right" size={18} />
+            </Pressable>
+          )}
 
           <Text style={styles.sectionLabel}>CHAT HISTORY</Text>
           <FlatList
@@ -151,6 +162,9 @@ const styles = StyleSheet.create({
   upgradeCopy: { flex: 1 },
   upgradeTitle: { color: "#A43B33", fontSize: 12, fontWeight: "800" },
   upgradeBody: { color: "#AD6B65", fontSize: 10, marginTop: 2 },
+  signOutButton: { alignItems: "center", backgroundColor: "#F2EFEC", borderColor: "#E2DDD8", borderRadius: 14, borderWidth: 1, flexDirection: "row", gap: 8, marginBottom: 17, padding: 10 },
+  signOutTitle: { color: "#574541", fontSize: 12, fontWeight: "800" },
+  signOutBody: { color: "#84756F", fontSize: 10, marginTop: 2 },
   sectionLabel: { color: "#8A8884", fontSize: 10, fontWeight: "800", letterSpacing: 0.9, marginBottom: 8, paddingLeft: 4 },
   list: { gap: 6, paddingBottom: 16 },
   emptyList: { flexGrow: 1, justifyContent: "center", paddingBottom: 50 },
