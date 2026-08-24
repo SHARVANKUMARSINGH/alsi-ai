@@ -153,3 +153,9 @@
 - [x] Execute controlled live text and vision checks for each configured ALSI model route; repair the two verified defective vision mappings.
 - [x] Run the complete build and regression suite, record results, and repair only verified defects.
 - [x] Checkpoint and publish the verified model-route repair and reusable live test harness.
+- [x] Audit the Android Appwrite OAuth callback configuration and fresh-build requirements.
+- [x] Validate a fresh Android export includes the Appwrite OAuth callback scheme.
+- [ ] Guide a physical-device GitHub authorization and repository-publishing test, then record results.
+- [x] Confirm the App Builder gate, model route, project-file generation, and command-review test scope.
+- [x] Run controlled App Builder live generation and safety checks without executing proposed commands; the live NVIDIA request was rate-limited, with no defect or unsafe behavior observed.
+- [x] Run focused regression and Android package validation; repair only verified App Builder defects.
