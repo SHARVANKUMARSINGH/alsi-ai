@@ -17,6 +17,7 @@ import {
   type ListRenderItemInfo,
 } from "react-native";
 
+import { AccountSheet } from "@/components/account-sheet";
 import { AiControlsSheet } from "@/components/ai-controls-sheet";
 import { ChatMessage } from "@/components/chat-message";
 import { ConversationSidebar } from "@/components/conversation-sidebar";
@@ -35,6 +36,7 @@ import {
   type StoredAccount,
 } from "@/lib/account";
 import { buildCompletionHistory, createMessage, getModeSummary, type ChatImageAttachment, type ChatMessage as ChatMessageType, type ChatSettings } from "@/lib/chat";
+import { loadComposerDrafts, saveComposerDrafts, type ComposerDrafts } from "@/lib/composer-drafts";
 import {
   appendMessageToConversation,
   createConversation,
@@ -65,9 +67,11 @@ export default function HomeScreen() {
   const listRef = useRef<FlatList<ChatMessageType>>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
+  const [drafts, setDrafts] = useState<ComposerDrafts>({});
+  const [draftsReady, setDraftsReady] = useState(false);
   const [attachment, setAttachment] = useState<ChatImageAttachment | null>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [account, setAccount] = useState<StoredAccount | null>(null);
@@ -80,6 +84,8 @@ export default function HomeScreen() {
     () => conversations.find((conversation) => conversation.id === activeConversationId) ?? null,
     [activeConversationId, conversations],
   );
+  const draftKey = activeConversationId ?? "new";
+  const draft = drafts[draftKey] ?? "";
   const messages = activeConversation?.messages ?? [];
   const settings = activeConversation?.settings ?? defaultSettings;
   const selectedModel = getAlsiModel(account?.selectedModelId ?? "lite");
@@ -98,6 +104,25 @@ export default function HomeScreen() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadComposerDrafts().then((savedDrafts) => {
+      if (!isMounted) return;
+      setDrafts(savedDrafts);
+      setDraftsReady(true);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!draftsReady) return;
+    saveComposerDrafts(drafts).catch(() => undefined);
+  }, [drafts, draftsReady]);
 
   useEffect(() => {
     if (!account) return;
@@ -165,14 +190,36 @@ export default function HomeScreen() {
     ))));
   }, []);
 
+  const updateDraft = useCallback((value: string) => {
+    setDrafts((previous) => {
+      if (previous[draftKey] === value) return previous;
+      const next = { ...previous };
+      if (value) {
+        next[draftKey] = value;
+      } else {
+        delete next[draftKey];
+      }
+      return next;
+    });
+  }, [draftKey]);
+
+  const clearDraft = useCallback((key: string) => {
+    setDrafts((previous) => {
+      if (!(key in previous)) return previous;
+      const next = { ...previous };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
   const startNewConversation = useCallback(() => {
     const conversation = createConversation(defaultSettings);
     setConversations((previous) => sortConversations([conversation, ...previous]));
     setActiveConversationId(conversation.id);
-    setDraft("");
+    clearDraft("new");
     setAttachment(null);
     setSidebarOpen(false);
-  }, []);
+  }, [clearDraft]);
 
   const updateSettings = useCallback((nextSettings: ChatSettings) => {
     if (!activeConversation) {
@@ -214,7 +261,7 @@ export default function HomeScreen() {
       return sortConversations(next);
     });
     setActiveConversationId(conversation.id);
-    setDraft("");
+    updateDraft("");
     setAttachment(null);
 
     try {
@@ -237,7 +284,49 @@ export default function HomeScreen() {
       const errorMessage = createMessage("assistant", explanation, { isError: true });
       updateConversation(conversation.id, (current) => appendMessageToConversation(current, errorMessage));
     }
-  }, [account, activeConversation, attachment, completion, draft, isSending, selectedModel, updateConversation]);
+  }, [account, activeConversation, attachment, completion, draft, isSending, selectedModel, updateConversation, updateDraft]);
+
+  const retryFailedMessage = useCallback(async (failedMessage: ChatMessageType) => {
+    if (isSending || !account || !activeConversation) return;
+
+    const refreshedAccount = refreshAccountTokens(account);
+    if (!chargeTokens(refreshedAccount, selectedModel.tokenCost)) {
+      Alert.alert("Out of tokens", "Out of tokens. Log in or wait for your 4-hour renewal.");
+      return;
+    }
+
+    const failureIndex = activeConversation.messages.findIndex((message) => message.id === failedMessage.id);
+    const previousUserMessage = activeConversation.messages.slice(0, failureIndex).findLast((message) => message.role === "user");
+    if (failureIndex < 0 || !previousUserMessage) {
+      Alert.alert("Unable to retry", "This message no longer has the original prompt needed for a retry.");
+      return;
+    }
+
+    const requestMessages = buildCompletionHistory(activeConversation.messages.slice(0, failureIndex));
+    updateConversation(activeConversation.id, (current) => ({
+      ...current,
+      messages: current.messages.filter((message) => message.id !== failedMessage.id),
+      updatedAt: Date.now(),
+    }));
+
+    try {
+      const response = await completion.mutateAsync({
+        messages: requestMessages,
+        mode: activeConversation.settings.mode,
+        aggression: activeConversation.settings.aggression,
+        modelId: selectedModel.id,
+        imageBase64: previousUserMessage.attachment?.base64,
+        imageMediaType: previousUserMessage.attachment?.mimeType,
+      });
+      const assistantMessage = createMessage("assistant", response.content);
+      updateConversation(activeConversation.id, (current) => appendMessageToConversation(current, assistantMessage));
+      setAccount((current) => current ? chargeTokens(refreshAccountTokens(current), selectedModel.tokenCost) ?? current : current);
+    } catch (error) {
+      const explanation = error instanceof Error ? error.message : "Please try again.";
+      const errorMessage = createMessage("assistant", explanation, { isError: true });
+      updateConversation(activeConversation.id, (current) => appendMessageToConversation(current, errorMessage));
+    }
+  }, [account, activeConversation, completion, isSending, selectedModel, updateConversation]);
 
   const applyImagePickerResult = useCallback((result: ImagePicker.ImagePickerResult) => {
     if (result.canceled) return;
@@ -291,7 +380,6 @@ export default function HomeScreen() {
 
   const openConversation = useCallback((conversation: Conversation) => {
     setActiveConversationId(conversation.id);
-    setDraft("");
     setAttachment(null);
     setSidebarOpen(false);
   }, []);
@@ -303,11 +391,11 @@ export default function HomeScreen() {
         text: "Delete",
         style: "destructive",
         onPress: () => {
+          clearDraft(conversationId);
           setConversations((previous) => {
             const next = previous.filter((conversation) => conversation.id !== conversationId);
             if (conversationId === activeConversationId) {
               setActiveConversationId(next[0]?.id ?? null);
-              setDraft("");
               setAttachment(null);
             }
             return next;
@@ -315,7 +403,7 @@ export default function HomeScreen() {
         },
       },
     ]);
-  }, [activeConversationId]);
+  }, [activeConversationId, clearDraft]);
 
   const login = useCallback(async (email: string, intent: AppwriteAuthIntent) => {
     const appwriteAccount = await completeAppwriteAuth(email, intent);
@@ -348,9 +436,14 @@ export default function HomeScreen() {
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<ChatMessageType>) => (
-      <ChatMessage message={item} quickCopyButtons={settings.quickCopyButtons !== false} />
+      <ChatMessage
+        message={item}
+        onRetry={item.isError ? retryFailedMessage : undefined}
+        quickCopyButtons={settings.quickCopyButtons !== false}
+        retryDisabled={isSending}
+      />
     ),
-    [settings.quickCopyButtons],
+    [isSending, retryFailedMessage, settings.quickCopyButtons],
   );
 
   const emptyState = (
@@ -364,7 +457,7 @@ export default function HomeScreen() {
       </Text>
       <View style={styles.suggestionGroup}>
         {starterPrompts.map((prompt) => (
-          <Pressable key={prompt} onPress={() => setDraft(prompt)} style={({ pressed }) => [styles.suggestion, pressed && styles.pressed]}>
+          <Pressable key={prompt} onPress={() => updateDraft(prompt)} style={({ pressed }) => [styles.suggestion, pressed && styles.pressed]}>
             <Text style={styles.suggestionText}>{prompt}</Text>
             <MaterialCommunityIcons color="#686765" name="arrow-up-right" size={16} />
           </Pressable>
@@ -373,7 +466,7 @@ export default function HomeScreen() {
     </View>
   );
 
-  if (!accountReady) {
+  if (!accountReady || !draftsReady) {
     return (
       <ScreenContainer edges={["top", "bottom", "left", "right"]} containerClassName="bg-background">
         <View style={styles.accountLoading}>
@@ -412,10 +505,10 @@ export default function HomeScreen() {
             </View>
           </View>
           <View style={styles.headerActions}>
-            <View accessibilityLabel={`${account.tokens} tokens available`} style={styles.tokenBadge}>
+            <Pressable accessibilityLabel={`Open account settings. ${account.tokens} tokens available`} onPress={() => setAccountSheetOpen(true)} style={({ pressed }) => [styles.tokenBadge, pressed && styles.pressed]}>
               <MaterialCommunityIcons color="#B4443C" name="lightning-bolt" size={14} />
               <Text style={styles.tokenText}>{account.tokens}</Text>
-            </View>
+            </Pressable>
             <Pressable
               accessibilityLabel="Open response controls"
               onPress={() => setControlsOpen(true)}
@@ -471,7 +564,7 @@ export default function HomeScreen() {
               editable={!isSending && !outOfTokens}
               maxLength={4000}
               multiline
-              onChangeText={setDraft}
+              onChangeText={updateDraft}
               onSubmitEditing={sendMessage}
               placeholder={outOfTokens ? "Out of tokens — log in or wait for renewal" : `Message ${selectedModel.label}...`}
               placeholderTextColor="#969491"
@@ -511,12 +604,22 @@ export default function HomeScreen() {
               )}
             </Pressable>
           </View>
+          <View style={styles.composerMeta}>
+            <Text style={styles.characterCount}>{draft.length.toLocaleString()}/4,000</Text>
+          </View>
           {outOfTokens ? <Text style={styles.tokenWarning}>Out of tokens. Log in or wait for your 4-hour renewal.</Text> : null}
           <Text style={styles.disclaimer}>ALSI Ai can make mistakes. Check important information.</Text>
         </View>
       </KeyboardAvoidingView>
 
       <AiControlsSheet onChange={updateSettings} onClose={() => setControlsOpen(false)} settings={settings} visible={controlsOpen} />
+      <AccountSheet
+        account={account}
+        onClose={() => setAccountSheetOpen(false)}
+        onSignOut={() => { void signOut(); }}
+        onUpgradeLogin={() => { setAccountSheetOpen(false); setLoginOpen(true); }}
+        visible={accountSheetOpen}
+      />
       <ConversationSidebar
         accountMode={account.mode}
         activeConversationId={activeConversationId}
@@ -525,7 +628,7 @@ export default function HomeScreen() {
         onCreateConversation={startNewConversation}
         onDeleteConversation={deleteConversation}
         onOpenConversation={openConversation}
-        onSignOut={() => { void signOut(); }}
+        onOpenAccountSettings={() => { setSidebarOpen(false); setAccountSheetOpen(true); }}
         onUpgradeLogin={() => { setSidebarOpen(false); setLoginOpen(true); }}
         visible={sidebarOpen}
       />
@@ -637,6 +740,8 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     paddingTop: 6,
   },
+  composerMeta: { alignItems: "flex-end", minHeight: 13, paddingRight: 5, paddingTop: 4 },
+  characterCount: { color: "#999793", fontSize: 10, fontVariant: ["tabular-nums"] },
   input: { color: "#21211F", flex: 1, fontSize: 16, lineHeight: 22, maxHeight: 112, paddingBottom: 8, paddingTop: 8 },
   composerControl: { alignItems: "center", height: 40, justifyContent: "center", width: 34 },
   controlDisabled: { opacity: 0.4 },

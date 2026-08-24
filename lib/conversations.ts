@@ -99,6 +99,21 @@ export function sortConversations(conversations: Conversation[]) {
   return [...conversations].sort((left, right) => right.updatedAt - left.updatedAt);
 }
 
+export function searchConversations(conversations: Conversation[], query: string) {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  if (!normalizedQuery) return conversations;
+
+  return conversations.filter((conversation) => {
+    const searchableText = [
+      conversation.title,
+      getConversationPreview(conversation.messages),
+      ...conversation.messages.map((message) => message.content),
+    ].join(" ").toLocaleLowerCase();
+
+    return searchableText.includes(normalizedQuery);
+  });
+}
+
 export function isConversation(value: unknown): value is Conversation {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<Conversation>;

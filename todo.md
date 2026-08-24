@@ -104,3 +104,8 @@
 - [x] Repair high-priority functional bugs and improve user-facing error and loading behavior.
 - [x] Strengthen mobile configuration, GitHub Actions reliability, and regression tests.
 - [x] Validate the complete quality pass and publish all repairs to GitHub main.
+- [x] Add an in-app account settings sheet with account status, token guidance, and a secure sign-out action.
+- [x] Add retryable failed assistant messages so a transient AI-service issue does not force users to retype their prompt.
+- [x] Add local conversation search and clear conversation metadata for faster archive navigation.
+- [x] Improve composer behavior with draft persistence and a visible character limit for reliable message recovery.
+- [x] Validate, checkpoint, and publish the proactive product-improvement pass.

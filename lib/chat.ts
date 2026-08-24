@@ -61,10 +61,10 @@ export function createMessage(
  */
 export function buildCompletionHistory(
   messages: ChatMessage[],
-  nextMessage: ChatMessage,
+  nextMessage?: ChatMessage,
   limit = 30,
 ): ChatCompletionMessage[] {
-  return [...messages, nextMessage]
+  return [...messages, ...(nextMessage ? [nextMessage] : [])]
     .filter((message) => !message.isError)
     .slice(-limit)
     .map(({ role, content }) => ({ role, content }));

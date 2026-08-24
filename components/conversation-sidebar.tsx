@@ -1,8 +1,9 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { FlatList, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import type { AccountMode } from "@/lib/account";
-import { getConversationPreview, type Conversation } from "@/lib/conversations";
+import { getConversationPreview, searchConversations, type Conversation } from "@/lib/conversations";
 
 type ConversationSidebarProps = {
   accountMode: AccountMode;
@@ -12,7 +13,7 @@ type ConversationSidebarProps = {
   onCreateConversation: () => void;
   onDeleteConversation: (id: string) => void;
   onOpenConversation: (conversation: Conversation) => void;
-  onSignOut: () => void;
+  onOpenAccountSettings: () => void;
   onUpgradeLogin: () => void;
   visible: boolean;
 };
@@ -35,10 +36,17 @@ export function ConversationSidebar({
   onCreateConversation,
   onDeleteConversation,
   onOpenConversation,
-  onSignOut,
+  onOpenAccountSettings,
   onUpgradeLogin,
   visible,
 }: ConversationSidebarProps) {
+  const [query, setQuery] = useState("");
+  const filteredConversations = useMemo(() => searchConversations(conversations, query), [conversations, query]);
+
+  useEffect(() => {
+    if (!visible) setQuery("");
+  }, [visible]);
+
   return (
     <Modal animationType="fade" onRequestClose={onClose} transparent visible={visible}>
       <View style={styles.root}>
@@ -69,28 +77,46 @@ export function ConversationSidebar({
               <MaterialCommunityIcons color="#A93D35" name="chevron-right" size={18} />
             </Pressable>
           ) : (
-            <Pressable accessibilityLabel="Sign out and switch account" onPress={onSignOut} style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}>
-              <MaterialCommunityIcons color="#7D4A45" name="logout-variant" size={17} />
+            <Pressable accessibilityLabel="Open account settings" onPress={onOpenAccountSettings} style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}>
+              <MaterialCommunityIcons color="#7D4A45" name="account-cog-outline" size={17} />
               <View style={styles.upgradeCopy}>
-                <Text style={styles.signOutTitle}>Signed in</Text>
-                <Text style={styles.signOutBody}>Sign out to switch accounts</Text>
+                <Text style={styles.signOutTitle}>Account settings</Text>
+                <Text style={styles.signOutBody}>Token balance and sign out</Text>
               </View>
               <MaterialCommunityIcons color="#7D4A45" name="chevron-right" size={18} />
             </Pressable>
           )}
 
           <Text style={styles.sectionLabel}>CHAT HISTORY</Text>
+          <View style={styles.searchShell}>
+            <MaterialCommunityIcons color="#8A8884" name="magnify" size={18} />
+            <TextInput
+              accessibilityLabel="Search conversations"
+              autoCorrect={false}
+              onChangeText={setQuery}
+              placeholder="Search chats"
+              placeholderTextColor="#A5A29E"
+              returnKeyType="search"
+              style={styles.searchInput}
+              value={query}
+            />
+            {query ? (
+              <Pressable accessibilityLabel="Clear conversation search" onPress={() => setQuery("")} style={styles.clearSearchButton}>
+                <MaterialCommunityIcons color="#77746F" name="close-circle" size={17} />
+              </Pressable>
+            ) : null}
+          </View>
           <FlatList
-            contentContainerStyle={conversations.length === 0 ? styles.emptyList : styles.list}
-            data={conversations}
+            contentContainerStyle={filteredConversations.length === 0 ? styles.emptyList : styles.list}
+            data={filteredConversations}
             keyExtractor={(conversation) => conversation.id}
             ListEmptyComponent={
               <View style={styles.emptyState}>
                 <View style={styles.emptyIcon}>
                   <MaterialCommunityIcons color="#9A9894" name="message-outline" size={22} />
                 </View>
-                <Text style={styles.emptyTitle}>No saved chats yet</Text>
-                <Text style={styles.emptyBody}>Start a new conversation and it will appear here automatically.</Text>
+                  <Text style={styles.emptyTitle}>{query ? "No matching chats" : "No saved chats yet"}</Text>
+                  <Text style={styles.emptyBody}>{query ? "Try another word from a chat title or message." : "Start a new conversation and it will appear here automatically."}</Text>
               </View>
             }
             renderItem={({ item }) => {
@@ -166,6 +192,9 @@ const styles = StyleSheet.create({
   signOutTitle: { color: "#574541", fontSize: 12, fontWeight: "800" },
   signOutBody: { color: "#84756F", fontSize: 10, marginTop: 2 },
   sectionLabel: { color: "#8A8884", fontSize: 10, fontWeight: "800", letterSpacing: 0.9, marginBottom: 8, paddingLeft: 4 },
+  searchShell: { alignItems: "center", backgroundColor: "#FFFFFF", borderColor: "#E2DFDA", borderRadius: 13, borderWidth: 1, flexDirection: "row", marginBottom: 11, paddingHorizontal: 10 },
+  searchInput: { color: "#2E2D2A", flex: 1, fontSize: 13, minHeight: 42, paddingLeft: 7 },
+  clearSearchButton: { alignItems: "center", height: 30, justifyContent: "center", width: 30 },
   list: { gap: 6, paddingBottom: 16 },
   emptyList: { flexGrow: 1, justifyContent: "center", paddingBottom: 50 },
   conversationItem: { alignItems: "center", borderRadius: 14, flexDirection: "row", minHeight: 70, paddingLeft: 12, paddingRight: 5 },

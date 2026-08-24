@@ -106,4 +106,13 @@ describe("ALSI OpenRouter payload", () => {
     expect(history.at(-1)?.content).toBe("latest");
     expect(history.some((message) => message.content === "message 31")).toBe(false);
   });
+
+  it("builds retry context without resubmitting a failed assistant message", () => {
+    const history = buildCompletionHistory([
+      { id: "user", role: "user", content: "Explain closures", createdAt: 1 },
+      { id: "failed", role: "assistant", content: "Service unavailable", createdAt: 2, isError: true },
+    ]);
+
+    expect(history).toEqual([{ role: "user", content: "Explain closures" }]);
+  });
 });
