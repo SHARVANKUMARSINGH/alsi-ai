@@ -1,7 +1,7 @@
 export type AlsiModelId = "lite" | "standard" | "pro";
 export const APP_BUILDER_MODEL_ID = "app-builder" as const;
 export type CompletionModelId = AlsiModelId | typeof APP_BUILDER_MODEL_ID;
-export const APP_BUILDER_OPENROUTER_MODEL = "stealth/ox-alpha";
+export const APP_BUILDER_OPENROUTER_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
 
 export type AlsiModelRoute = {
   text: string;

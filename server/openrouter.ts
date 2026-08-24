@@ -1,5 +1,5 @@
 export const OPENROUTER_CHAT_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-import { getOpenRouterModel, type AlsiModelId, type CompletionModelId } from "../lib/models";
+import { getOpenRouterModel, type CompletionModelId } from "../lib/models";
 
 export const ALSI_MODEL = getOpenRouterModel("pro", false);
 export const OPENROUTER_OVERLOAD_MESSAGE = "The AI server is currently overloaded. Please try again in a few seconds.";

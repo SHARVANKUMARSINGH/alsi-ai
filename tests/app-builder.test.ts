@@ -31,10 +31,10 @@ describe("App Builder Alpha", () => {
     expect(prompt).toContain("individual review and approval");
   });
 
-  it("routes App Builder through the dedicated Ox Alpha model", () => {
+  it("routes App Builder through the dedicated NVIDIA Ultra free model", () => {
     expect(APP_BUILDER_MODEL_ID).toBe("app-builder");
-    expect(APP_BUILDER_OPENROUTER_MODEL).toBe("stealth/ox-alpha");
-    expect(getOpenRouterModel(APP_BUILDER_MODEL_ID, false)).toBe("stealth/ox-alpha");
+    expect(APP_BUILDER_OPENROUTER_MODEL).toBe("nvidia/nemotron-3-ultra-550b-a55b:free");
+    expect(getOpenRouterModel(APP_BUILDER_MODEL_ID, false)).toBe("nvidia/nemotron-3-ultra-550b-a55b:free");
   });
 
   it("extracts only executable-looking lines from fenced command blocks for user review", () => {

@@ -121,3 +121,9 @@
 - [x] Lock image uploading during App Builder mode and route App Builder generation through the dedicated model contract.
 - [x] Add explicit per-command review and approval controls without allowing background or hidden command execution.
 - [x] Test the strengthened App Builder flow, validate Android behavior, checkpoint, and publish the update.
+- [x] Define safe failure statuses and model-selection rules for App Builder fallback routing.
+- [x] Retry a failed Ox Alpha App Builder completion through NVIDIA Nemotron 3 Ultra free without changing command-approval controls.
+- [x] Add fallback regression coverage, validate Android behavior, checkpoint, and publish the update.
+- [x] Remove the Ox Alpha preview model from all App Builder routing and user-facing guidance.
+- [x] Make NVIDIA Nemotron 3 Ultra free the primary App Builder model while retaining image locking and individual command approval.
+- [x] Update tests, validate Android behavior, checkpoint, and publish the revised App Builder model policy.
