@@ -149,3 +149,7 @@
 - [x] Restore the explicit-approval GitHub OAuth publish flow and remove the user-entered key field.
 - [x] Add OAuth-path regression coverage and validate the restored Appwrite GitHub OAuth flow.
 - [x] Checkpoint and publish the GitHub OAuth restoration.
+- [x] Inventory every configured ALSI text, vision, and App Builder model route and define harmless live test inputs.
+- [x] Execute controlled live text and vision checks for each configured ALSI model route; repair the two verified defective vision mappings.
+- [x] Run the complete build and regression suite, record results, and repair only verified defects.
+- [ ] Checkpoint and publish the verified model-route repair and reusable live test harness.

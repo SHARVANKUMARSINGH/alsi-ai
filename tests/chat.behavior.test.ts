@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildCompletionHistory } from "../lib/chat";
-import { ALSI_MODEL, OPENROUTER_OVERLOAD_MESSAGE, buildAttachmentAwareMessages, buildOpenRouterPayload, parseOpenRouterCompletion, shouldUseFreeVisionFallback, userSafeOpenRouterError } from "../server/openrouter";
+import { ALSI_MODEL, OPENROUTER_OVERLOAD_MESSAGE, buildAttachmentAwareMessages, buildOpenRouterPayload, parseOpenRouterCompletion, shouldRetryEmptyFreeRouterCompletion, shouldUseFreeVisionFallback, userSafeOpenRouterError } from "../server/openrouter";
 
 describe("ALSI OpenRouter payload", () => {
   const messages = [{ role: "user" as const, content: "Explain magnetic fields." }];
@@ -49,7 +49,7 @@ describe("ALSI OpenRouter payload", () => {
       modelId: "standard",
     });
 
-    expect(payload.model).toBe("google/gemma-4-31b-it:free");
+    expect(payload.model).toBe("nvidia/nemotron-nano-12b-v2-vl:free");
     expect(payload.messages[1].content).toEqual([
       { type: "text", text: "What is visible in this image?" },
       { type: "image_url", image_url: { url: "data:image/jpeg;base64,aW1hZ2U=" } },
@@ -81,6 +81,11 @@ describe("ALSI OpenRouter payload", () => {
     expect(shouldUseFreeVisionFallback("pro", true, 429)).toBe(false);
     expect(shouldUseFreeVisionFallback("lite", false, 429)).toBe(false);
     expect(shouldUseFreeVisionFallback("standard", true, 400)).toBe(false);
+  });
+
+  it("retries an empty successful completion only when the free router was selected", () => {
+    expect(shouldRetryEmptyFreeRouterCompletion("openrouter/free")).toBe(true);
+    expect(shouldRetryEmptyFreeRouterCompletion("nvidia/nemotron-nano-12b-v2-vl:free")).toBe(false);
   });
 
   it("returns specific, recoverable messages for upstream credential and traffic failures", () => {

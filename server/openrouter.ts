@@ -101,6 +101,10 @@ export function shouldUseFreeVisionFallback(
   return hasImageAttachment && (modelId === "lite" || modelId === "standard") && (status === 429 || status >= 500);
 }
 
+export function shouldRetryEmptyFreeRouterCompletion(model: string) {
+  return model === "openrouter/free";
+}
+
 export function userSafeOpenRouterError(status: number) {
   if (status === 401 || status === 403) {
     return "ALSI Ai's connection credentials need attention. Please try again shortly.";

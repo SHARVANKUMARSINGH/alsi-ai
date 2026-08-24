@@ -11,6 +11,7 @@ import {
   buildAttachmentAwareMessages,
   buildOpenRouterPayload,
   parseOpenRouterCompletion,
+  shouldRetryEmptyFreeRouterCompletion,
   shouldUseFreeVisionFallback,
   userSafeOpenRouterError,
 } from "./openrouter";
@@ -73,6 +74,7 @@ export const appRouter = router({
           signal: controller.signal,
         });
 
+        let requestedModel = primaryPayload.model;
         let response = await requestCompletion(primaryPayload);
 
         if (shouldUseFreeVisionFallback(input.modelId, Boolean(input.imageBase64), response.status)) {
@@ -82,22 +84,31 @@ export const appRouter = router({
             body: primaryErrorBody.slice(0, 500),
           });
           response = await requestCompletion({ ...primaryPayload, model: "openrouter/free" });
+          requestedModel = "openrouter/free";
         }
 
-        if (!response.ok) {
-          const rawErrorBody = await response.text();
-          console.error("[ALSI OpenRouter] Completion failed", {
-            status: response.status,
-            body: rawErrorBody.slice(0, 500),
-          });
-          throw new TRPCError({
-            code: "BAD_GATEWAY",
-            message: userSafeOpenRouterError(response.status),
-          });
+        const readCompletion = async (completionResponse: Response) => {
+          const rawCompletionBody = await completionResponse.text();
+          if (!completionResponse.ok) {
+            console.error("[ALSI OpenRouter] Completion failed", {
+              status: completionResponse.status,
+              body: rawCompletionBody.slice(0, 500),
+            });
+            throw new TRPCError({
+              code: "BAD_GATEWAY",
+              message: userSafeOpenRouterError(completionResponse.status),
+            });
+          }
+          return parseOpenRouterCompletion(rawCompletionBody);
+        };
+
+        let content = await readCompletion(response);
+        if (!content && shouldRetryEmptyFreeRouterCompletion(requestedModel)) {
+          console.warn("[ALSI OpenRouter] Free router returned an empty completion; retrying once.");
+          response = await requestCompletion({ ...primaryPayload, model: "openrouter/free" });
+          content = await readCompletion(response);
         }
 
-        const rawCompletionBody = await response.text();
-        const content = parseOpenRouterCompletion(rawCompletionBody);
         if (!content) {
           throw new TRPCError({
             code: "BAD_GATEWAY",
