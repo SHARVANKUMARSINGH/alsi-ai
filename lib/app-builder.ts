@@ -14,6 +14,10 @@ export function canUseAppBuilder(_modelId: AlsiModelId, settings: ChatSettings) 
   return settings.mode === "thinking";
 }
 
+export function canOpenConfirmedAppBuilder(_modelId: AlsiModelId, settings: ChatSettings, acknowledged: boolean) {
+  return canUseAppBuilder(_modelId, settings) && acknowledged;
+}
+
 export function getAppBuilderRequirementMessage(_modelId: AlsiModelId, settings: ChatSettings) {
   if (settings.mode !== "thinking") return "Choose Thinking mode to unlock App Builder Alpha.";
   return "App Builder Alpha is ready.";

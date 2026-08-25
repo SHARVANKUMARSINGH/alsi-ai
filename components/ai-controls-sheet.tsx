@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 import {
@@ -9,6 +10,7 @@ import {
   type ChatMode,
   type ChatSettings,
 } from "@/lib/chat";
+import { canOpenConfirmedAppBuilder } from "@/lib/app-builder";
 
 type AiControlsSheetProps = {
   visible: boolean;
@@ -24,10 +26,16 @@ const modes: { id: ChatMode; label: string; icon: "message-processing-outline" |
 ];
 
 export function AiControlsSheet({ visible, settings, onChange, onClose, onOpenAppBuilder }: AiControlsSheetProps) {
+  const [appBuilderAcknowledged, setAppBuilderAcknowledged] = useState(false);
   const setMode = (mode: ChatMode) => onChange({ ...settings, mode });
   const setAggression = (aggression: AggressionLevel) => onChange({ ...settings, aggression });
   const setQuickCopyButtons = (quickCopyButtons: boolean) => onChange({ ...settings, quickCopyButtons });
   const appBuilderReady = settings.mode === "thinking";
+  const appBuilderActionReady = canOpenConfirmedAppBuilder("lite", settings, appBuilderAcknowledged);
+
+  useEffect(() => {
+    if (!visible || !appBuilderReady) setAppBuilderAcknowledged(false);
+  }, [appBuilderReady, visible]);
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
@@ -137,13 +145,24 @@ export function AiControlsSheet({ visible, settings, onChange, onClose, onOpenAp
             </View>
           </View>
           <Pressable
-            accessibilityLabel="Develop an app with App Builder Alpha"
+            accessibilityLabel="Acknowledge App Builder guide and command review requirements"
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: appBuilderAcknowledged, disabled: !appBuilderReady }}
             disabled={!appBuilderReady}
-            onPress={onOpenAppBuilder}
-            style={({ pressed }) => [styles.appBuilderButton, !appBuilderReady && styles.appBuilderButtonDisabled, pressed && styles.pressed]}
+            onPress={() => setAppBuilderAcknowledged((value) => !value)}
+            style={({ pressed }) => [styles.appBuilderAcknowledgment, !appBuilderReady && styles.appBuilderAcknowledgmentDisabled, pressed && styles.pressed]}
           >
-            <Text style={[styles.appBuilderButtonText, !appBuilderReady && styles.appBuilderButtonTextDisabled]}>{appBuilderReady ? "Develop app" : "Turn on Thinking"}</Text>
-            <MaterialCommunityIcons color={appBuilderReady ? "#FFFFFF" : "#9E9C98"} name={appBuilderReady ? "hammer-wrench" : "head-snowflake-outline"} size={17} />
+            <MaterialCommunityIcons color={appBuilderAcknowledged ? "#2767B5" : "#6B83A0"} name={appBuilderAcknowledged ? "checkbox-marked" : "checkbox-blank-outline"} size={20} />
+            <Text style={[styles.appBuilderAcknowledgmentText, !appBuilderReady && styles.appBuilderAcknowledgmentTextDisabled]}>I understand this creates a guide only. I will review every proposed command before using it.</Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Develop an app with App Builder Alpha"
+            disabled={!appBuilderActionReady}
+            onPress={onOpenAppBuilder}
+            style={({ pressed }) => [styles.appBuilderButton, !appBuilderActionReady && styles.appBuilderButtonDisabled, pressed && styles.pressed]}
+          >
+            <Text style={[styles.appBuilderButtonText, !appBuilderActionReady && styles.appBuilderButtonTextDisabled]}>{!appBuilderReady ? "Turn on Thinking" : appBuilderAcknowledged ? "Develop app" : "Confirm to develop"}</Text>
+            <MaterialCommunityIcons color={appBuilderActionReady ? "#FFFFFF" : "#9E9C98"} name={appBuilderActionReady ? "hammer-wrench" : "checkbox-marked-outline"} size={17} />
           </Pressable>
         </View>
 
@@ -362,6 +381,10 @@ const styles = StyleSheet.create({
   alphaBadge: { backgroundColor: "#DCEBFF", borderColor: "#B5D0F4", borderRadius: 7, borderWidth: 1, paddingHorizontal: 5, paddingVertical: 1 },
   alphaBadgeText: { color: "#2767B5", fontSize: 8, fontWeight: "900", letterSpacing: 0.6 },
   appBuilderDescription: { color: "#5C7EA4", fontSize: 10, lineHeight: 14, marginTop: 3 },
+  appBuilderAcknowledgment: { alignItems: "flex-start", flexDirection: "row", gap: 7, marginTop: 11 },
+  appBuilderAcknowledgmentDisabled: { opacity: 0.56 },
+  appBuilderAcknowledgmentText: { color: "#426C96", flex: 1, fontSize: 10, lineHeight: 14 },
+  appBuilderAcknowledgmentTextDisabled: { color: "#94A0AD" },
   appBuilderButton: { alignItems: "center", backgroundColor: "#3976C8", borderRadius: 11, flexDirection: "row", justifyContent: "center", marginTop: 11, paddingVertical: 10 },
   appBuilderButtonDisabled: { backgroundColor: "#E2E6EC" },
   appBuilderButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800", marginRight: 6 },

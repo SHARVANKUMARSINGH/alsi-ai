@@ -168,3 +168,7 @@
 - [x] Run controlled text, production-budget sample-image vision, and App Builder checks without executing generated commands.
 - [x] Complete regression and Android validation for the App Builder eligibility update.
 - [x] Checkpoint and publish the Thinking-only App Builder eligibility update.
+- [x] Define the accessible Develop app confirmation tick box and its guide-only command-review disclosure.
+- [x] Add the confirmation tick box and prevent opening App Builder until it is selected.
+- [x] Validate the guarded action and Android package for the confirmation update.
+- [ ] Checkpoint and publish the Develop app confirmation update.

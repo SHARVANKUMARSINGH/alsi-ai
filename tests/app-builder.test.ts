@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { APP_BUILDER_TOKEN_COST, buildAppBuilderPrompt, canUseAppBuilder, createCompleteProjectFiles, extractCommandProposals, extractProjectFiles, getAppBuilderRequirementMessage } from "../lib/app-builder";
+import { APP_BUILDER_TOKEN_COST, buildAppBuilderPrompt, canOpenConfirmedAppBuilder, canUseAppBuilder, createCompleteProjectFiles, extractCommandProposals, extractProjectFiles, getAppBuilderRequirementMessage } from "../lib/app-builder";
 import { APP_BUILDER_MODEL_ID, APP_BUILDER_OPENROUTER_MODEL, getOpenRouterModel } from "../lib/models";
 
 describe("App Builder Alpha", () => {
@@ -17,6 +17,14 @@ describe("App Builder Alpha", () => {
   it("gives the user a clear explanation of the missing eligibility requirement", () => {
     expect(getAppBuilderRequirementMessage("pro", { mode: "normal", aggression: 3 })).toContain("Thinking");
     expect(getAppBuilderRequirementMessage("lite", { mode: "thinking", aggression: 0 })).toContain("ready");
+  });
+
+  it("requires a user acknowledgment before the Thinking-mode Develop app action can open", () => {
+    const thinking = { mode: "thinking" as const, aggression: 0 as const };
+
+    expect(canOpenConfirmedAppBuilder("lite", thinking, false)).toBe(false);
+    expect(canOpenConfirmedAppBuilder("lite", thinking, true)).toBe(true);
+    expect(canOpenConfirmedAppBuilder("pro", { mode: "normal", aggression: 3 }, true)).toBe(false);
   });
 
   it("requires safe Termux, optional icon, and user-controlled EAS handoff guidance", () => {
