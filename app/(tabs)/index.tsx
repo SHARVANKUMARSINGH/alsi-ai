@@ -702,13 +702,12 @@ export default function HomeScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      <AiControlsSheet
-        onChange={updateSettings}
-        onClose={() => setControlsOpen(false)}
-        onOpenAppBuilder={openAppBuilder}
-        selectedModelId={selectedModel.id}
-        settings={settings}
-        visible={controlsOpen}
+        <AiControlsSheet
+          onChange={updateSettings}
+          onClose={() => setControlsOpen(false)}
+          onOpenAppBuilder={openAppBuilder}
+          settings={settings}
+          visible={controlsOpen}
       />
       <AppBuilderSheet
         availableTokens={account.tokens}

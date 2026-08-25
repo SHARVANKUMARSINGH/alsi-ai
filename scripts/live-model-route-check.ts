@@ -6,6 +6,7 @@ import {
   OPENROUTER_CHAT_ENDPOINT,
   buildAttachmentAwareMessages,
   buildOpenRouterPayload,
+  getEmptyCompletionRetryCount,
   parseOpenRouterCompletion,
   shouldUseFreeVisionFallback,
 } from "../server/openrouter";
@@ -70,7 +71,7 @@ async function main() {
     const settings = { modelId: route.modelId, mode: "normal" as const, aggression: 0 as const };
     const primaryPayload = {
       ...buildOpenRouterPayload(messages, settings),
-      max_tokens: route.modelId === "app-builder" ? 1600 : 80,
+      max_tokens: route.modelId === "app-builder" || route.usesVision ? 1600 : 80,
     };
     const configuredModel = primaryPayload.model;
 
@@ -85,8 +86,17 @@ async function main() {
         response = await requestCompletion({ ...primaryPayload, model: "openrouter/free" });
       }
 
-      const body = await response.text();
-      const content = response.ok ? parseOpenRouterCompletion(body) : null;
+      let body = await response.text();
+      let content = response.ok ? parseOpenRouterCompletion(body) : null;
+      const requestedModel = usedFallback ? "openrouter/free" : configuredModel;
+      let retryCount = 0;
+      const maximumRetries = getEmptyCompletionRetryCount(requestedModel);
+      while (!content && response.ok && retryCount < maximumRetries) {
+        retryCount += 1;
+        response = await requestCompletion({ ...primaryPayload, model: usedFallback ? "openrouter/free" : configuredModel });
+        body = await response.text();
+        content = response.ok ? parseOpenRouterCompletion(body) : null;
+      }
       results.push({
         id: route.id,
         configuredModel,
@@ -94,6 +104,7 @@ async function main() {
         initialStatus,
         finalStatus: response.status,
         usedFallback,
+        retryCount,
         completionReceived: Boolean(content),
         outcome: response.status === 429 ? "rate_limited" : response.ok && content ? "pass" : "fail",
       });

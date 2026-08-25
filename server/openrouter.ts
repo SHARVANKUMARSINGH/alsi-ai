@@ -98,11 +98,13 @@ export function shouldUseFreeVisionFallback(
   hasImageAttachment: boolean,
   status: number,
 ) {
-  return hasImageAttachment && (modelId === "lite" || modelId === "standard") && (status === 429 || status >= 500);
+  return hasImageAttachment && (modelId === "lite" || modelId === "standard") && (status === 404 || status === 429 || status >= 500);
 }
 
-export function shouldRetryEmptyFreeRouterCompletion(model: string) {
-  return model === "openrouter/free";
+export function getEmptyCompletionRetryCount(model: string) {
+  if (model === "dots-studio/dots-3-note-preview:free") return 2;
+  if (model === "openrouter/free") return 1;
+  return 0;
 }
 
 export function userSafeOpenRouterError(status: number) {
@@ -118,12 +120,22 @@ export function userSafeOpenRouterError(status: number) {
   return "ALSI Ai could not complete that request. Please try again.";
 }
 
+function extractCompletionText(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) return content.map(extractCompletionText).join("");
+  if (!content || typeof content !== "object") return "";
+
+  const value = content as { text?: unknown; content?: unknown };
+  if (typeof value.text === "string") return value.text;
+  return extractCompletionText(value.content);
+}
+
 export function parseOpenRouterCompletion(rawBody: string): string | null {
   try {
     const completion = JSON.parse(rawBody) as {
-      choices?: Array<{ message?: { content?: string | null } }>;
+      choices?: Array<{ message?: { content?: unknown } }>;
     };
-    return completion.choices?.[0]?.message?.content?.trim() || null;
+    return extractCompletionText(completion.choices?.[0]?.message?.content).trim() || null;
   } catch {
     return null;
   }

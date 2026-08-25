@@ -10,8 +10,8 @@ import {
   OPENROUTER_OVERLOAD_MESSAGE,
   buildAttachmentAwareMessages,
   buildOpenRouterPayload,
+  getEmptyCompletionRetryCount,
   parseOpenRouterCompletion,
-  shouldRetryEmptyFreeRouterCompletion,
   shouldUseFreeVisionFallback,
   userSafeOpenRouterError,
 } from "./openrouter";
@@ -103,9 +103,12 @@ export const appRouter = router({
         };
 
         let content = await readCompletion(response);
-        if (!content && shouldRetryEmptyFreeRouterCompletion(requestedModel)) {
-          console.warn("[ALSI OpenRouter] Free router returned an empty completion; retrying once.");
-          response = await requestCompletion({ ...primaryPayload, model: "openrouter/free" });
+        let retryCount = 0;
+        const maximumRetries = getEmptyCompletionRetryCount(requestedModel);
+        while (!content && retryCount < maximumRetries) {
+          retryCount += 1;
+          console.warn("[ALSI OpenRouter] Provider returned an empty completion; retrying.", { model: requestedModel, retryCount, maximumRetries });
+          response = await requestCompletion({ ...primaryPayload, model: requestedModel });
           content = await readCompletion(response);
         }
 

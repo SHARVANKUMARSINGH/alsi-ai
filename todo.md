@@ -163,3 +163,8 @@
 - [x] Add a Continue with Google control while preserving email OTP sign-in and sign-up.
 - [x] Validate Google OAuth readiness, authentication regressions, and Android export.
 - [x] Checkpoint and publish the Google sign-in update.
+- [x] Review current App Builder gating, Develop app visibility, and reusable text/vision/App Builder test coverage.
+- [x] Make App Builder require Thinking mode only and present a clear Develop app action when it is available.
+- [x] Run controlled text, production-budget sample-image vision, and App Builder checks without executing generated commands.
+- [x] Complete regression and Android validation for the App Builder eligibility update.
+- [ ] Checkpoint and publish the Thinking-only App Builder eligibility update.

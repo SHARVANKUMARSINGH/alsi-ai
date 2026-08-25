@@ -9,7 +9,6 @@ import {
   type ChatMode,
   type ChatSettings,
 } from "@/lib/chat";
-import type { AlsiModelId } from "@/lib/models";
 
 type AiControlsSheetProps = {
   visible: boolean;
@@ -17,7 +16,6 @@ type AiControlsSheetProps = {
   onChange: (settings: ChatSettings) => void;
   onClose: () => void;
   onOpenAppBuilder: () => void;
-  selectedModelId: AlsiModelId;
 };
 
 const modes: { id: ChatMode; label: string; icon: "message-processing-outline" | "head-snowflake-outline" }[] = [
@@ -25,12 +23,11 @@ const modes: { id: ChatMode; label: string; icon: "message-processing-outline" |
   { id: "thinking", label: "Thinking", icon: "head-snowflake-outline" },
 ];
 
-export function AiControlsSheet({ visible, settings, onChange, onClose, onOpenAppBuilder, selectedModelId }: AiControlsSheetProps) {
+export function AiControlsSheet({ visible, settings, onChange, onClose, onOpenAppBuilder }: AiControlsSheetProps) {
   const setMode = (mode: ChatMode) => onChange({ ...settings, mode });
   const setAggression = (aggression: AggressionLevel) => onChange({ ...settings, aggression });
   const setQuickCopyButtons = (quickCopyButtons: boolean) => onChange({ ...settings, quickCopyButtons });
-  const isPro = selectedModelId === "pro";
-  const appBuilderReady = isPro && settings.mode === "thinking" && settings.aggression === 3;
+  const appBuilderReady = settings.mode === "thinking";
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
@@ -128,29 +125,27 @@ export function AiControlsSheet({ visible, settings, onChange, onClose, onOpenAp
           />
         </View>
 
-        {isPro ? (
-          <View style={styles.appBuilderCard}>
-            <View style={styles.appBuilderHeader}>
-              <View style={styles.appBuilderIcon}><MaterialCommunityIcons color="#FFFFFF" name="hammer-wrench" size={18} /></View>
-              <View style={styles.appBuilderCopy}>
-                <View style={styles.appBuilderTitleRow}>
-                  <Text style={styles.appBuilderTitle}>Develop apps</Text>
-                  <View style={styles.alphaBadge}><Text style={styles.alphaBadgeText}>ALPHA</Text></View>
-                </View>
-                <Text style={styles.appBuilderDescription}>{appBuilderReady ? "Generate a safe Expo build guide for 40 tokens." : "Requires Thinking mode and Maximum Aggressive Mode."}</Text>
+        <View style={styles.appBuilderCard}>
+          <View style={styles.appBuilderHeader}>
+            <View style={styles.appBuilderIcon}><MaterialCommunityIcons color="#FFFFFF" name="hammer-wrench" size={18} /></View>
+            <View style={styles.appBuilderCopy}>
+              <View style={styles.appBuilderTitleRow}>
+                <Text style={styles.appBuilderTitle}>Develop apps</Text>
+                <View style={styles.alphaBadge}><Text style={styles.alphaBadgeText}>ALPHA</Text></View>
               </View>
+              <Text style={styles.appBuilderDescription}>{appBuilderReady ? "Thinking mode is active. Generate a safe Expo build guide for 40 tokens." : "Turn on Thinking mode to develop an Expo app."}</Text>
             </View>
-            <Pressable
-              accessibilityLabel="Open App Builder Alpha"
-              disabled={!appBuilderReady}
-              onPress={onOpenAppBuilder}
-              style={({ pressed }) => [styles.appBuilderButton, !appBuilderReady && styles.appBuilderButtonDisabled, pressed && styles.pressed]}
-            >
-              <Text style={[styles.appBuilderButtonText, !appBuilderReady && styles.appBuilderButtonTextDisabled]}>{appBuilderReady ? "Open App Builder" : "Configure to unlock"}</Text>
-              <MaterialCommunityIcons color={appBuilderReady ? "#FFFFFF" : "#9E9C98"} name="arrow-right" size={17} />
-            </Pressable>
           </View>
-        ) : null}
+          <Pressable
+            accessibilityLabel="Develop an app with App Builder Alpha"
+            disabled={!appBuilderReady}
+            onPress={onOpenAppBuilder}
+            style={({ pressed }) => [styles.appBuilderButton, !appBuilderReady && styles.appBuilderButtonDisabled, pressed && styles.pressed]}
+          >
+            <Text style={[styles.appBuilderButtonText, !appBuilderReady && styles.appBuilderButtonTextDisabled]}>{appBuilderReady ? "Develop app" : "Turn on Thinking"}</Text>
+            <MaterialCommunityIcons color={appBuilderReady ? "#FFFFFF" : "#9E9C98"} name={appBuilderReady ? "hammer-wrench" : "head-snowflake-outline"} size={17} />
+          </Pressable>
+        </View>
 
         <Pressable onPress={onClose} style={({ pressed }) => [styles.doneButton, pressed && styles.pressed]}>
           <Text style={styles.doneText}>Done</Text>

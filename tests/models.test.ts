@@ -11,7 +11,7 @@ describe("ALSI model tiers", () => {
         description: "Fast text and vision help",
         openRouterModel: {
           text: "openrouter/free",
-          vision: "nvidia/nemotron-nano-12b-v2-vl:free",
+          vision: "dots-studio/dots-3-note-preview:free",
         },
         tokenCost: 1,
       },
@@ -21,7 +21,7 @@ describe("ALSI model tiers", () => {
         description: "Balanced text and vision analysis",
         openRouterModel: {
           text: "openrouter/free",
-          vision: "nvidia/nemotron-nano-12b-v2-vl:free",
+          vision: "dots-studio/dots-3-note-preview:free",
         },
         tokenCost: 3,
       },
@@ -31,7 +31,7 @@ describe("ALSI model tiers", () => {
         description: "Deep text and vision reasoning",
         openRouterModel: {
           text: "dots-studio/dots-3-note-preview:free",
-          vision: "nvidia/nemotron-nano-12b-v2-vl:free",
+          vision: "dots-studio/dots-3-note-preview:free",
         },
         tokenCost: 5,
       },
@@ -41,9 +41,9 @@ describe("ALSI model tiers", () => {
   it("resolves a selected tier by identifier", () => {
     expect(getAlsiModel("standard").tokenCost).toBe(3);
     expect(getOpenRouterModel("lite", false)).toBe("openrouter/free");
-    expect(getOpenRouterModel("lite", true)).toBe("nvidia/nemotron-nano-12b-v2-vl:free");
-    expect(getOpenRouterModel("standard", true)).toBe("nvidia/nemotron-nano-12b-v2-vl:free");
+    expect(getOpenRouterModel("lite", true)).toBe("dots-studio/dots-3-note-preview:free");
+    expect(getOpenRouterModel("standard", true)).toBe("dots-studio/dots-3-note-preview:free");
     expect(getOpenRouterModel("pro", false)).toBe("dots-studio/dots-3-note-preview:free");
-    expect(getOpenRouterModel("pro", true)).toBe("nvidia/nemotron-nano-12b-v2-vl:free");
+    expect(getOpenRouterModel("pro", true)).toBe("dots-studio/dots-3-note-preview:free");
   });
 });

@@ -10,14 +10,12 @@ export type GeneratedProjectFile = {
   content: string;
 };
 
-export function canUseAppBuilder(modelId: AlsiModelId, settings: ChatSettings) {
-  return modelId === "pro" && settings.mode === "thinking" && settings.aggression === 3;
+export function canUseAppBuilder(_modelId: AlsiModelId, settings: ChatSettings) {
+  return settings.mode === "thinking";
 }
 
-export function getAppBuilderRequirementMessage(modelId: AlsiModelId, settings: ChatSettings) {
-  if (modelId !== "pro") return "Select Alsi Pro to unlock App Builder Alpha.";
+export function getAppBuilderRequirementMessage(_modelId: AlsiModelId, settings: ChatSettings) {
   if (settings.mode !== "thinking") return "Choose Thinking mode to unlock App Builder Alpha.";
-  if (settings.aggression !== 3) return "Set Aggressive Mode to Maximum to unlock App Builder Alpha.";
   return "App Builder Alpha is ready.";
 }
 

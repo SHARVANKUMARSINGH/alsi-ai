@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildCompletionHistory } from "../lib/chat";
-import { ALSI_MODEL, OPENROUTER_OVERLOAD_MESSAGE, buildAttachmentAwareMessages, buildOpenRouterPayload, parseOpenRouterCompletion, shouldRetryEmptyFreeRouterCompletion, shouldUseFreeVisionFallback, userSafeOpenRouterError } from "../server/openrouter";
+import { ALSI_MODEL, OPENROUTER_OVERLOAD_MESSAGE, buildAttachmentAwareMessages, buildOpenRouterPayload, getEmptyCompletionRetryCount, parseOpenRouterCompletion, shouldUseFreeVisionFallback, userSafeOpenRouterError } from "../server/openrouter";
 
 describe("ALSI OpenRouter payload", () => {
   const messages = [{ role: "user" as const, content: "Explain magnetic fields." }];
@@ -49,7 +49,7 @@ describe("ALSI OpenRouter payload", () => {
       modelId: "standard",
     });
 
-    expect(payload.model).toBe("nvidia/nemotron-nano-12b-v2-vl:free");
+    expect(payload.model).toBe("dots-studio/dots-3-note-preview:free");
     expect(payload.messages[1].content).toEqual([
       { type: "text", text: "What is visible in this image?" },
       { type: "image_url", image_url: { url: "data:image/jpeg;base64,aW1hZ2U=" } },
@@ -75,17 +75,32 @@ describe("ALSI OpenRouter payload", () => {
     expect(OPENROUTER_OVERLOAD_MESSAGE).toBe("The AI server is currently overloaded. Please try again in a few seconds.");
   });
 
+  it("extracts visible text from a structured provider content object without using provider reasoning", () => {
+    const completion = JSON.stringify({
+      choices: [{
+        message: {
+          content: { type: "text", text: "VISION_OK" },
+          reasoning: "private provider trace",
+        },
+      }],
+    });
+
+    expect(parseOpenRouterCompletion(completion)).toBe("VISION_OK");
+  });
+
   it("retries unavailable Lite and Standard image routes through the free vision router", () => {
     expect(shouldUseFreeVisionFallback("lite", true, 429)).toBe(true);
+    expect(shouldUseFreeVisionFallback("lite", true, 404)).toBe(true);
     expect(shouldUseFreeVisionFallback("standard", true, 502)).toBe(true);
     expect(shouldUseFreeVisionFallback("pro", true, 429)).toBe(false);
     expect(shouldUseFreeVisionFallback("lite", false, 429)).toBe(false);
     expect(shouldUseFreeVisionFallback("standard", true, 400)).toBe(false);
   });
 
-  it("retries an empty successful completion only when the free router was selected", () => {
-    expect(shouldRetryEmptyFreeRouterCompletion("openrouter/free")).toBe(true);
-    expect(shouldRetryEmptyFreeRouterCompletion("nvidia/nemotron-nano-12b-v2-vl:free")).toBe(false);
+  it("uses bounded empty-completion retries only for the supported free routes", () => {
+    expect(getEmptyCompletionRetryCount("openrouter/free")).toBe(1);
+    expect(getEmptyCompletionRetryCount("dots-studio/dots-3-note-preview:free")).toBe(2);
+    expect(getEmptyCompletionRetryCount("nvidia/nemotron-3-ultra-550b-a55b:free")).toBe(0);
   });
 
   it("returns specific, recoverable messages for upstream credential and traffic failures", () => {

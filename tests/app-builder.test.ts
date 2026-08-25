@@ -4,20 +4,19 @@ import { APP_BUILDER_TOKEN_COST, buildAppBuilderPrompt, canUseAppBuilder, create
 import { APP_BUILDER_MODEL_ID, APP_BUILDER_OPENROUTER_MODEL, getOpenRouterModel } from "../lib/models";
 
 describe("App Builder Alpha", () => {
-  it("requires Alsi Pro, Thinking mode, and maximum Aggressive Mode", () => {
-    const maximumThinking = { mode: "thinking" as const, aggression: 3 as const };
+  it("requires Thinking mode only, independent of the selected chat tier or aggressive setting", () => {
+    const thinking = { mode: "thinking" as const, aggression: 0 as const };
 
     expect(APP_BUILDER_TOKEN_COST).toBe(40);
-    expect(canUseAppBuilder("pro", maximumThinking)).toBe(true);
-    expect(canUseAppBuilder("standard", maximumThinking)).toBe(false);
+    expect(canUseAppBuilder("lite", thinking)).toBe(true);
+    expect(canUseAppBuilder("standard", { mode: "thinking", aggression: 2 })).toBe(true);
+    expect(canUseAppBuilder("pro", { mode: "thinking", aggression: 3 })).toBe(true);
     expect(canUseAppBuilder("pro", { mode: "normal", aggression: 3 })).toBe(false);
-    expect(canUseAppBuilder("pro", { mode: "thinking", aggression: 2 })).toBe(false);
   });
 
   it("gives the user a clear explanation of the missing eligibility requirement", () => {
-    expect(getAppBuilderRequirementMessage("lite", { mode: "thinking", aggression: 3 })).toContain("Alsi Pro");
     expect(getAppBuilderRequirementMessage("pro", { mode: "normal", aggression: 3 })).toContain("Thinking");
-    expect(getAppBuilderRequirementMessage("pro", { mode: "thinking", aggression: 2 })).toContain("Maximum");
+    expect(getAppBuilderRequirementMessage("lite", { mode: "thinking", aggression: 0 })).toContain("ready");
   });
 
   it("requires safe Termux, optional icon, and user-controlled EAS handoff guidance", () => {

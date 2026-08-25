@@ -23,7 +23,7 @@ export const alsiModels: readonly AlsiModel[] = [
     description: "Fast text and vision help",
     openRouterModel: {
       text: "openrouter/free",
-      vision: "nvidia/nemotron-nano-12b-v2-vl:free",
+      vision: "dots-studio/dots-3-note-preview:free",
     },
     tokenCost: 1,
   },
@@ -33,7 +33,7 @@ export const alsiModels: readonly AlsiModel[] = [
     description: "Balanced text and vision analysis",
     openRouterModel: {
       text: "openrouter/free",
-      vision: "nvidia/nemotron-nano-12b-v2-vl:free",
+      vision: "dots-studio/dots-3-note-preview:free",
     },
     tokenCost: 3,
   },
@@ -43,7 +43,7 @@ export const alsiModels: readonly AlsiModel[] = [
     description: "Deep text and vision reasoning",
     openRouterModel: {
       text: "dots-studio/dots-3-note-preview:free",
-      vision: "nvidia/nemotron-nano-12b-v2-vl:free",
+      vision: "dots-studio/dots-3-note-preview:free",
     },
     tokenCost: 5,
   },
