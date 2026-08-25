@@ -167,4 +167,4 @@
 - [x] Make App Builder require Thinking mode only and present a clear Develop app action when it is available.
 - [x] Run controlled text, production-budget sample-image vision, and App Builder checks without executing generated commands.
 - [x] Complete regression and Android validation for the App Builder eligibility update.
-- [ ] Checkpoint and publish the Thinking-only App Builder eligibility update.
+- [x] Checkpoint and publish the Thinking-only App Builder eligibility update.
