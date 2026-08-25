@@ -171,4 +171,4 @@
 - [x] Define the accessible Develop app confirmation tick box and its guide-only command-review disclosure.
 - [x] Add the confirmation tick box and prevent opening App Builder until it is selected.
 - [x] Validate the guarded action and Android package for the confirmation update.
-- [ ] Checkpoint and publish the Develop app confirmation update.
+- [x] Checkpoint and publish the Develop app confirmation update.
