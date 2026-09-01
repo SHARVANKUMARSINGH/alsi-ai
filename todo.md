@@ -177,3 +177,6 @@
 - [x] Verify App Builder safeguards and Google/GitHub OAuth authorization starts without executing commands or creating repositories; the repeated live model suite was temporarily rate-limited upstream across all free routes.
 - [x] Run the complete package validation suite and repair only verified defects; no application defect was confirmed.
 - [x] Checkpoint and publish the comprehensive application-check record.
+- [x] Identify the user-designated Slphsa icon asset and every current A-logo branding reference; the published source already uses the matching Slphsa mark.
+- [x] Confirm the main, launcher, splash, adaptive, and favicon branding already point to the Slphsa asset family; no replacement was necessary.
+- [ ] Validate the corrected Android branding output, create a managed checkpoint, and publish the update; Android export passed, but checkpointing is blocked by the reset project repository state.
