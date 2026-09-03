@@ -180,3 +180,13 @@
 - [x] Identify the user-designated Slphsa icon asset and every current A-logo branding reference; the published source already uses the matching Slphsa mark.
 - [x] Confirm the main, launcher, splash, adaptive, and favicon branding already point to the Slphsa asset family; no replacement was necessary.
 - [ ] Validate the corrected Android branding output, create a managed checkpoint, and publish the update; Android export passed, but checkpointing is blocked by the reset project repository state.
+- [x] Audit the six credential-dependent tests and document the required environment variables and provider setup.
+- [x] Add WebBrowser auth-session completion handling to the Expo Router root layout.
+- [x] Superseded by the explicit `app/localhost.tsx` Appwrite callback route, which handles the existing `manusalsiai://localhost/` success redirect without an unmatched route.
+- [x] Validate OAuth callback routing, TypeScript, tests, lint, Expo Doctor, and Android export.
+- [ ] Save a managed checkpoint and publish the OAuth/configuration update.
+- [x] Add an Expo Router `app/localhost.tsx` callback route for Appwrite OAuth success redirects.
+- [x] Create the Appwrite session from callback `userId` and `secret`, then replace the route with the authenticated home screen.
+- [x] Add WebBrowser auth-session completion handling to the root layout and validate the OAuth callback flow.
+- [ ] Push the current checkpointed ALSI Ai source to the public GitHub repository using the configured write credential.
+- [ ] Verify the remote commit matches the checkpointed source and confirm the local working tree is clean.
