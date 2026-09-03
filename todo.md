@@ -188,5 +188,5 @@
 - [x] Add an Expo Router `app/localhost.tsx` callback route for Appwrite OAuth success redirects.
 - [x] Create the Appwrite session from callback `userId` and `secret`, then replace the route with the authenticated home screen.
 - [x] Add WebBrowser auth-session completion handling to the root layout and validate the OAuth callback flow.
-- [ ] Push the current checkpointed ALSI Ai source to the public GitHub repository using the configured write credential.
-- [ ] Verify the remote commit matches the checkpointed source and confirm the local working tree is clean.
+- [x] Push the current checkpointed ALSI Ai source to the public GitHub repository using the configured write credential.
+- [x] Verify the remote commit matches the checkpointed source and confirm the local working tree is clean.
